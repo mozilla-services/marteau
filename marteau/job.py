@@ -24,6 +24,10 @@ def run_loadtest(git_repo):
     # now looking for the marteau config file in there
     config = read_config(os.getcwd())
 
+    wdir = config.get('wdir')
+    if wdir is not None:
+        os.chdir(wdir)
+
     # running the tests  XXX will use lower-level code later
     saved = list(sys.argv)
     sys.argv[:] = [sys.executable, config['script'], config['test']]

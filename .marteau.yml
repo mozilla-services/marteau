@@ -1,0 +1,5 @@
+name: foo
+test: StupidTest.test_simple
+script: loadtest.py
+xml: simple-bench.xml
+wdir: marteau/tests
