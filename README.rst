@@ -1,58 +1,33 @@
-Continuous load testing project
-===============================
+Marteau - Continuous load testing
+=================================
 
-Not triggered by commits, but manually
+Marteau uses Funkload to run a load test against a project.
 
-Configuration file: .marteau.yaml
+The entry point is a YAML configuration file.
 
 Example::
 
-    config: NodeAssignmentTest
+    name: foo
+    test: StupidTest.test_simple
     script: loadtest.py
-    nodes: 1
-    notifications:
-        email:
-            - tarek@mozilla.com
-        irc:
-            channels:
-                - "irc.freenode.org#mozilla-circus"
-            on_success: change
+    xml: simple-bench.xml
 
-Why it's cool:
 
-- KISS load testing (one py script) -- like readthedocs and travis-ci
-- easy to trigger a massive amount of load
+Run Marteau locally
+-------------------
 
-How it's used:
+Use the **marteau** command line tool, followed by the repository
+or a local directory.
 
-- provides a local script to try out the config. "marteau .marteau.yaml"
-- you register a github repo on marteau-cld.org, it looks for .marteau.yaml
-- you ping the server to run it (via the command line script or via a button on the
-  site)
+Example::
 
-Marteau does the following:
+    $ marteau https://github.com/mozilla-services/marteau
 
-- spreads the load accross multiple nodes
-- runs the loadtest as defined in the config+script
-- builds the merged report
-- publish the report on marteau-cld.org ala travis
-- sends a notification (email, irc, etc)
 
-Limitations
+Run Marteau in the cloud
+------------------------
 
-- you have to prove you own the domain, by adding a key file at the root
-  containing a secret text marteau-cld.org gives you
-- no js tests
-- the user is responsible for cleanups
+XXX
 
-Business plan:
-
-- free for 1 node
-- pay per use for > 1 node.
-- use Heroku or EC2
-
-open question:
-
-- security ? cgroups ?
-- how do scale the testings ? queues ?
-- how to track usage
+::
+    $ marteau https://github.com/mozilla-services/marteau --server http://marteau-server.example.org
