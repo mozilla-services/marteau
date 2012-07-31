@@ -3,7 +3,8 @@ from marteau import __version__
 
 
 install_requires = ['funkload', 'bottle', 'rq', 'rq-dashboard',
-                    'circus', 'PyYAML']
+                    'circus', 'PyYAML', 'paramiko']
+
 
 try:
     import argparse     # NOQA
