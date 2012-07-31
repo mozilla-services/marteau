@@ -28,26 +28,22 @@ def run_loadtest(git_repo):
     if wdir is not None:
         os.chdir(wdir)
 
-    # running the tests  XXX will use lower-level code later
-    saved = list(sys.argv)
-    sys.argv[:] = [sys.executable, config['script'], config['test']]
-    try:
-        funkload()
-    except SystemExit:
-        pass
-    finally:
-        sys.argv[:] = saved
+    # creating a virtualenv there
+    subprocess.check_call('virtualenv --no-site-packages .', shell=True)
 
-    # generating the reports
-    saved = list(sys.argv)
-    # xml can be found in the config file
-    sys.argv[:] = [sys.executable, '--html', '-o', 'html', config['xml']]
-    try:
-        build_report()
-    except SystemExit:
-        pass
-    finally:
-        sys.argv[:] = saved
+    python = os.path.join('bin', 'python')
+    subprocess.check_call('bin/pip install funkload', shell=True)
+
+    # install dependencies if any
+    for dep in config['deps']:
+        subprocess.check_call('bin/pip install %s' % dep, shell=True)
+
+    subprocess.check_call('bin/fl-run-bench %s %s' % (config['script'],
+                                                      config['test']),
+                          shell=True)
+
+    subprocess.check_call('bin/fl-build-report --html -o html %s' %
+            config['xml'], shell=True)
 
     return 'OK'
 
