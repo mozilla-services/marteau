@@ -86,8 +86,16 @@ def run_loadtest(git_repo, redirector=None):
     for dep in config['deps']:
         run_func('bin/pip install %s' % dep, redirector)
 
-    run_func('bin/fl-run-bench %s %s' % (config['script'],
-                                                      config['test']),
+    # is this a distributed test ?
+    nodes = config.get('nodes', [])
+    if nodes != []:
+        workers = ','.join(nodes)
+        workers = '--distribute-workers %s' % workers
+        cmd = 'bin/fl-run-bench --distribute ' + workers
+    else:
+        cmd = 'bin/fl-run-bench'
+
+    run_func('%s %s %s' % (cmd, config['script'], config['test']),
                           redirector)
 
     run_func('bin/fl-build-report --html -o html %s' %
