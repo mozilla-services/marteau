@@ -1,10 +1,8 @@
-import time
 import os
 import subprocess
 import sys
 import fcntl
 import argparse
-import sys
 import logging
 
 from marteau import __version__, logger
