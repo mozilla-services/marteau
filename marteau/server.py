@@ -1,14 +1,26 @@
-from marteau import logger
+import os
 
 from bottle import app, route, request
+from mako.template import Template
 
-from marteau.queue import queue, get_job
+from marteau.queue import queue, get_job, get_jobs
 from marteau.job import run_loadtest
+from marteau import logger
+
+
+CURDIR = os.path.dirname(__file__)
 
 
 @route('/', method='GET')
 def index():
-    return 'Welcome to Marteau'
+    index = Template(filename=os.path.join(CURDIR, 'templates', 'index.mako'))
+    return index.render(jobs=get_jobs())
+
+
+@route('/test', method='GET')
+def get_all_jobs():
+    """Adds a run into Marteau"""
+    return get_jobs()
 
 
 @route('/test', method='POST')

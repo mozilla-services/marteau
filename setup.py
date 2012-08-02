@@ -3,7 +3,8 @@ from marteau import __version__
 
 
 install_requires = ['funkload', 'bottle', 'rq', 'rq-dashboard',
-                    'circus', 'PyYAML', 'paramiko']
+                    'circus', 'PyYAML', 'paramiko',
+                    'Mako']
 
 
 try:
