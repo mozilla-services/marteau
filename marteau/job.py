@@ -46,7 +46,7 @@ def streamredirect(func):
     return _streamredirect
 
 
-def run_func(cmd, redirector):
+def run_func(cmd, redirector, stop_on_failure=True):
     logger.debug(cmd)
     process = subprocess.Popen(cmd, shell=True,
             stdout=subprocess.PIPE,
@@ -54,8 +54,13 @@ def run_func(cmd, redirector):
     if redirector:
         redirector.add_redirection('marteau', process, process.stdout)
         redirector.add_redirection('marteau', process, process.stderr)
+
     process.wait()
-    return process.returncode
+    res = process.returncode
+    if res != 0 and stop_on_failure:
+        raise Exception("%r failed" % cmd)
+
+    return res
 
 
 run_bench = "%s -c 'from funkload.BenchRunner import main; main()'"
