@@ -58,6 +58,14 @@ def run_func(cmd, redirector):
     return process.returncode
 
 
+run_bench = "%s -c 'from funkload.BenchRunner import main; main()'"
+run_bench = run_bench % sys.executable
+run_report = "%s -c 'from funkload.ReportBuilder import main; main()'"
+run_report = run_report % sys.executable
+run_pip = "%s -c 'from pip import runner; runner.run()'"
+run_pip = run_pip % sys.executable
+
+
 @streamredirect
 def run_loadtest(git_repo, redirector=None):
     if os.path.exists(git_repo):
@@ -80,25 +88,27 @@ def run_loadtest(git_repo, redirector=None):
     # creating a virtualenv there
     run_func('virtualenv --no-site-packages .', redirector)
 
-    run_func('bin/pip install funkload', redirector)
+    python = os.path.join('bin', 'python')
+    run_func(run_pip + ' install funkload', redirector)
 
     # install dependencies if any
-    for dep in config.get('deps', ()):
-        run_func('bin/pip install %s' % dep, redirector)
+    for dep in config.get('deps', []):
+        run_func(run_pip + ' install %s' % dep, redirector)
 
     # is this a distributed test ?
     nodes = config.get('nodes', [])
+
     if nodes != []:
         workers = ','.join(nodes)
         workers = '--distribute-workers %s' % workers
-        cmd = 'bin/fl-run-bench --distribute ' + workers
+        cmd = '%s --distribute ' % (run_bench, workers)
     else:
-        cmd = 'bin/fl-run-bench'
+        cmd = run_bench
 
     run_func('%s %s %s' % (cmd, config['script'], config['test']),
                           redirector)
 
-    run_func('bin/fl-build-report --html -o html %s' %
+    run_func(run_report + ' --html -o html %s' %
             config['xml'], redirector)
 
     return 'OK'
