@@ -105,7 +105,7 @@ def run_loadtest(git_repo, redirector=None):
 
     if nodes != []:
         workers = ','.join(nodes)
-        workers = '--distribute-workers %s' % workers
+        workers = '--distribute-workers=%s' % workers
         cmd = '%s --distribute ' % (run_bench, workers)
     else:
         cmd = run_bench
