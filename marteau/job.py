@@ -47,6 +47,7 @@ def streamredirect(func):
 
 
 def run_func(cmd, redirector):
+    logger.debug(cmd)
     process = subprocess.Popen(cmd, shell=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE)
@@ -79,11 +80,10 @@ def run_loadtest(git_repo, redirector=None):
     # creating a virtualenv there
     run_func('virtualenv --no-site-packages .', redirector)
 
-    python = os.path.join('bin', 'python')
     run_func('bin/pip install funkload', redirector)
 
     # install dependencies if any
-    for dep in config['deps']:
+    for dep in config.get('deps', ()):
         run_func('bin/pip install %s' % dep, redirector)
 
     # is this a distributed test ?
@@ -124,7 +124,6 @@ def configure_logger(logger, level='INFO', output="-"):
     logger.addHandler(h)
 
 
-
 def main():
     parser = argparse.ArgumentParser(description='Drives Funkload.')
     parser.add_argument('repo', help='Git repository or local directory',
@@ -158,7 +157,6 @@ def main():
         sys.exit(0)
     finally:
         logger.info('Bye!')
-
 
 
 if __name__ == '__main__':
