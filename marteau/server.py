@@ -52,6 +52,8 @@ def _get_result(jobid):
     status, console = queue.get_result(jobid)
     if status is None:
         status = 'Running'
+    else:
+        status = status['data']
 
     return res.render(status=status, console=console)
 
