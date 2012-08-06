@@ -59,15 +59,15 @@ run_pip = "%s -c 'from pip import runner; runner.run()'"
 run_pip = run_pip % sys.executable
 
 
-def run_loadtest(git_repo, redirector=None):
-    if os.path.exists(git_repo):
+def run_loadtest(repo):
+    if os.path.exists(repo):
         # just a local dir, lets work there
-        os.chdir(git_repo)
+        os.chdir(repo)
     else:
         # checking out the repo
         os.chdir(workdir)
-        name = git_repo.split('/')[-1].split('.')[0]
-        run_func('git clone %s' % git_repo, redirector)
+        name = repo.split('/')[-1].split('.')[0]
+        run_func('git clone %s' % repo)
         os.chdir(os.path.join(workdir, name))
 
     # now looking for the marteau config file in there
@@ -78,14 +78,14 @@ def run_loadtest(git_repo, redirector=None):
         os.chdir(wdir)
 
     # creating a virtualenv there
-    run_func('virtualenv --no-site-packages .', redirector)
+    run_func('virtualenv --no-site-packages .')
 
     python = os.path.join('bin', 'python')
-    run_func(run_pip + ' install funkload', redirector)
+    run_func(run_pip + ' install funkload')
 
     # install dependencies if any
     for dep in config.get('deps', []):
-        run_func(run_pip + ' install %s' % dep, redirector)
+        run_func(run_pip + ' install %s' % dep)
 
     # is this a distributed test ?
     nodes = config.get('nodes', [])
@@ -97,12 +97,8 @@ def run_loadtest(git_repo, redirector=None):
     else:
         cmd = run_bench
 
-    run_func('%s %s %s' % (cmd, config['script'], config['test']),
-                          redirector)
-
-    run_func(run_report + ' --html -o html %s' %
-            config['xml'], redirector)
-
+    run_func('%s %s %s' % (cmd, config['script'], config['test']))
+    run_func(run_report + ' --html -o html %s' % config['xml'])
     return 'OK'
 
 

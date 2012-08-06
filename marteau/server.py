@@ -18,7 +18,8 @@ def index():
                         workers=queue.get_workers(),
                         failures=queue.get_failures(),
                         successes=queue.get_successes(),
-                        get_result=queue.get_result)
+                        get_result=queue.get_result,
+                        running=queue.get_running_jobs())
 
 
 @route('/test', method='GET')
