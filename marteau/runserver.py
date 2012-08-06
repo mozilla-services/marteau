@@ -39,7 +39,6 @@ def configure_logger(logger, level='INFO', output="-"):
     logger.addHandler(h)
 
 
-
 def main():
     parser = argparse.ArgumentParser(description='Funkload Server')
     parser.add_argument('--config', help='Config file, if any')

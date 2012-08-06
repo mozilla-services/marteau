@@ -24,7 +24,7 @@ def append_console(job_id, data):
 
 
 def purge_console(job_id):
-    key = 'retools:jobconsole:%s' % job.job_id
+    key = 'retools:jobconsole:%s' % job_id
     try:
         return _QM.redis.get(key)
     finally:
@@ -101,7 +101,9 @@ def initialize():
     _QM.subscriber('job_prerun', handler='marteau.queue:starting')
 
 
-initialize()    ###
+# XXX should be in the app init
+initialize()
+
 
 def enqueue(funcname, **kwargs):
     return _QM.enqueue(funcname, **kwargs)

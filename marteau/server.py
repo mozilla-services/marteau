@@ -4,12 +4,12 @@ from bottle import app, route, request
 from mako.template import Template
 
 from marteau import queue
-from marteau import logger
 
 
 CURDIR = os.path.dirname(__file__)
 JOBTIMEOUT = 3600    # one hour
 queue.initialize()
+
 
 @route('/', method='GET')
 def index():

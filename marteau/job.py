@@ -10,9 +10,6 @@ from marteau.config import read_config
 from marteau.redirector import Redirector
 from marteau import queue
 
-from funkload.BenchRunner import main as funkload
-from funkload.ReportBuilder import main as build_report
-
 
 workdir = '/tmp'
 
@@ -35,6 +32,7 @@ def _stream(data):
     if job_id is None:
         raise ValueError('No Job PID')
     queue.append_console(job_id, data['data'])
+
 
 def run_func(cmd, stop_on_failure=True):
     redirector = Redirector(_stream)
@@ -83,8 +81,6 @@ def run_loadtest(repo):
 
     # creating a virtualenv there
     run_func('virtualenv --no-site-packages .')
-
-    python = os.path.join('bin', 'python')
     run_func(run_pip + ' install funkload')
 
     # install dependencies if any
