@@ -8,6 +8,7 @@ import logging
 from marteau import __version__, logger
 from marteau.config import read_config
 from marteau.redirector import Redirector
+from marteau import queue
 
 from funkload.BenchRunner import main as funkload
 from funkload.ReportBuilder import main as build_report
@@ -30,7 +31,10 @@ def _stream(data):
     sys.stdout.write(data['data'])
     # XXX we'll push this in memory somewhere for
     # the web app to display it live
-
+    job_id = queue.pid_to_jobid(os.getpid())
+    if job_id is None:
+        raise ValueError('No Job PID')
+    queue.append_console(job_id, data['data'])
 
 def run_func(cmd, stop_on_failure=True):
     redirector = Redirector(_stream)

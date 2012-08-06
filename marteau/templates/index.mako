@@ -10,14 +10,14 @@
    <h2>Pending jobs</h2>
    %for job in jobs:
    <div>
-    <h3>${job.job_id}</h3>
+    <h3><a href="/test/${job.job_id}">${job.job_id}</a></h3>
    </div>
    %endfor
 
    <h2>Running jobs</h2>
    %for job in running:
    <div>
-        <h3>${job.job_id}</h3>
+        <h3><a href="/test/${job.job_id}">${job.job_id}</a></h3>
     </div>
    %endfor
 
@@ -25,7 +25,7 @@
   <h2>Failures</h2>
    %for job in failures:
    <div>
-      <h3>${job.job_id}</h3>
+      <h3><a href="/test/${job.job_id}">${job.job_id}</a></h3>
       <pre>${get_result(job.job_id)['data']}</pre>
    </div>
    %endfor
@@ -33,11 +33,9 @@
 <h2>Successes</h2>
    %for job in successes:
    <div>
-      <h3>${job.job_id}</h3>
-      <pre>${get_result(job.job_id)['data']}</pre>
+      <h3><a href="/test/${job.job_id}">${job.job_id}</a></h3>
    </div>
    %endfor
-
 
 
   </body>

@@ -22,6 +22,13 @@ def index():
                         running=queue.get_running_jobs())
 
 
+@route('/purge', method='GET')
+def purge():
+    """Adds a run into Marteau"""
+    queue.purge()
+    return 'purged'
+
+
 @route('/test', method='GET')
 def get_all_jobs():
     """Adds a run into Marteau"""
@@ -40,10 +47,13 @@ def add_run():
 @route('/test/<jobid>', method='GET')
 def _get_result(jobid):
     """Gets results from a run"""
-    res = queue.get_job(jobid).return_value
-    if res is None:
-        return 'not ready'
-    return res
+    res = Template(filename=os.path.join(CURDIR, 'templates', 'console.mako'))
+
+    status, console = queue.get_result(jobid)
+    if status is None:
+        status = 'Running'
+
+    return res.render(status=status, console=console)
 
 
 app = app()
