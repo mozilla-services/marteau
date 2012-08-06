@@ -2,9 +2,9 @@ from setuptools import setup, find_packages
 from marteau import __version__
 
 
-install_requires = ['funkload', 'bottle', 'rq', 'rq-dashboard',
+install_requires = ['funkload', 'bottle',
                     'circus', 'PyYAML', 'paramiko',
-                    'Mako']
+                    'Mako', 'retools']
 
 
 try:

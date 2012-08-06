@@ -32,33 +32,23 @@ def _stream(data):
     # the web app to display it live
 
 
-def streamredirect(func):
-    def _streamredirect(repo, redirector=None):
-        redirector = Redirector(_stream)
-        redirector.start()
-        func.redirector = redirector
-        try:
-            return func(repo, redirector=redirector)
-        finally:
-            redirector.kill()
-    return _streamredirect
-
-
-def run_func(cmd, redirector, stop_on_failure=True):
+def run_func(cmd, stop_on_failure=True):
+    redirector = Redirector(_stream)
+    redirector.start()
     logger.debug(cmd)
-    process = subprocess.Popen(cmd, shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE)
-    if redirector:
+    try:
+        process = subprocess.Popen(cmd, shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE)
         redirector.add_redirection('marteau', process, process.stdout)
         redirector.add_redirection('marteau', process, process.stderr)
-
-    process.wait()
-    res = process.returncode
-    if res != 0 and stop_on_failure:
-        raise Exception("%r failed" % cmd)
-
-    return res
+        process.wait()
+        res = process.returncode
+        if res != 0 and stop_on_failure:
+            raise Exception("%r failed" % cmd)
+        return res
+    finally:
+        redirector.kill()
 
 
 run_bench = "%s -c 'from funkload.BenchRunner import main; main()'"
@@ -69,7 +59,6 @@ run_pip = "%s -c 'from pip import runner; runner.run()'"
 run_pip = run_pip % sys.executable
 
 
-@streamredirect
 def run_loadtest(git_repo, redirector=None):
     if os.path.exists(git_repo):
         # just a local dir, lets work there
@@ -115,7 +104,6 @@ def run_loadtest(git_repo, redirector=None):
             config['xml'], redirector)
 
     return 'OK'
-
 
 
 def close_on_exec(fd):
