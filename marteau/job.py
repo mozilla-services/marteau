@@ -12,6 +12,8 @@ from marteau import queue
 
 
 workdir = '/tmp'
+reportsdir = '/tmp'
+
 
 LOG_LEVELS = {
     "critical": logging.CRITICAL,
@@ -97,9 +99,12 @@ def run_loadtest(repo):
     else:
         cmd = run_bench
 
+    target = os.path.join(reportsdir,
+            os.environ.get('MARTEAU_JOBID', 'report'))
+
     run_func('%s %s %s' % (cmd, config['script'], config['test']))
-    run_func(run_report + ' --html -o html %s' % config['xml'])
-    return 'OK'
+    run_func(run_report + ' --html -r %s  %s' % (target, config['xml']))
+    return target
 
 
 def close_on_exec(fd):

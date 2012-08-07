@@ -49,6 +49,7 @@ def get_successes():
 
 
 def starting(job=None):
+    os.environ['MARTEAU_JOBID'] = job.job_id
     job.redis.sadd('retools:started', job.job_id)
     job.redis.set('retools:job:%s' % job.job_id, job.to_json())
     job.redis.set('retools:jobpid:%s' % str(os.getpid()), job.job_id)

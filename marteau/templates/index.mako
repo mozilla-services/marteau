@@ -2,11 +2,10 @@
   <body>
    <h1>Marteau</h1>
 
-   <h2>Workers</h2>
-   %for worker in workers:
-   <div>${worker.worker_id} - Queues: ${", ".join(worker.queues)}</div>
-   %endfor
-
+    <form action="/test" method="POST">
+      Add a job. Repository: <input type="text" name="repo"/>
+      <input type="submit"/>
+    </form>
    <h2>Pending jobs</h2>
    %for job in jobs:
    <div>
@@ -26,7 +25,7 @@
    %for job in failures:
    <div>
       <h3><a href="/test/${job.job_id}">${job.job_id}</a></h3>
-      <pre>${get_result(job.job_id)['data']}</pre>
+      <pre>${get_result(job.job_id)[0]['data']}</pre>
    </div>
    %endfor
 
@@ -35,6 +34,11 @@
    <div>
       <h3><a href="/test/${job.job_id}">${job.job_id}</a></h3>
    </div>
+   %endfor
+
+   <h2>Workers</h2>
+   %for worker in workers:
+   <div>${worker.worker_id} - Queues: ${", ".join(worker.queues)}</div>
    %endfor
 
 

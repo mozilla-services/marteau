@@ -1,9 +1,9 @@
 import os
-
-from bottle import app, route, request
+from bottle import app, route, request, redirect, static_file
 from mako.template import Template
 
 from marteau import queue
+from marteau.job import reportsdir
 
 
 CURDIR = os.path.dirname(__file__)
@@ -38,9 +38,17 @@ def get_all_jobs():
 @route('/test', method='POST')
 def add_run():
     """Adds a run into Marteau"""
-    # a run is a github repo...
-    repo = request.body.read()
+    repo = request.forms.get('repo')
+    if repo is None:
+        repo = request.body.read()
+        rest = True
+    else:
+        rest = False
+
     job_id = queue.enqueue('marteau.job:run_loadtest', repo=repo)
+    if not rest:
+        return redirect('/')
+
     return job_id
 
 
@@ -56,6 +64,12 @@ def _get_result(jobid):
         status = status['data']
 
     return res.render(status=status, console=console)
+
+
+@route('/report/<jobid>/<filename:path>')
+def download(jobid, filename):
+    path = os.path.join(reportsdir, jobid)
+    return static_file(filename, root=path)
 
 
 app = app()
