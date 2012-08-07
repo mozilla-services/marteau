@@ -4,7 +4,8 @@ from marteau import __version__
 
 install_requires = ['funkload', 'bottle',
                     'circus', 'PyYAML', 'paramiko',
-                    'Mako', 'retools']
+                    'Mako', 'retools',
+                    'virtualenv']
 
 
 try:
