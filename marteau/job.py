@@ -4,6 +4,8 @@ import sys
 import fcntl
 import argparse
 import logging
+import tempfile
+
 
 from marteau import __version__, logger
 from marteau.config import read_config
@@ -31,9 +33,8 @@ def _stream(data):
     # XXX we'll push this in memory somewhere for
     # the web app to display it live
     job_id = queue.pid_to_jobid(os.getpid())
-    if job_id is None:
-        raise ValueError('No Job PID')
-    queue.append_console(job_id, data['data'])
+    if job_id is not None:
+        queue.append_console(job_id, data['data'])
 
 
 def run_func(cmd, stop_on_failure=True):
@@ -86,25 +87,34 @@ def run_loadtest(repo):
     run_func(run_pip + ' install funkload')
 
     # install dependencies if any
-    for dep in config.get('deps', []):
+    deps = config.get('deps', [])
+    for dep in deps:
         run_func(run_pip + ' install %s' % dep)
 
     # is this a distributed test ?
     nodes = config.get('nodes', [])
+    distributed = nodes != []
 
-    if nodes != []:
+    if distributed:
         workers = ','.join(nodes)
         workers = '--distribute-workers=%s' % workers
-        cmd = '%s --distribute ' % (run_bench, workers)
+        cmd = '%s --distribute %s' % (run_bench, workers)
+        if deps != []:
+            cmd += ' --distributed-packages=%s' % ' '.join(deps)
+
+        target = tempfile.mkdtemp()
+        cmd += ' --distributed-log-path=%s' % target
+        target = os.path.join(target, '*.xml')
     else:
         cmd = run_bench
+        target = config['xml']
 
-    target = os.path.join(reportsdir,
+    report_dir = os.path.join(reportsdir,
             os.environ.get('MARTEAU_JOBID', 'report'))
 
     run_func('%s %s %s' % (cmd, config['script'], config['test']))
-    run_func(run_report + ' --html -r %s  %s' % (target, config['xml']))
-    return target
+    run_func(run_report + ' --html -r %s  %s' % (report_dir, target))
+    return report_dir
 
 
 def close_on_exec(fd):
