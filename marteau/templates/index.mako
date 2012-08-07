@@ -9,30 +9,38 @@
    <h2>Pending jobs</h2>
    %for job in jobs:
    <div>
-    <h3><a href="/test/${job.job_id}">${job.job_id}</a></h3>
+    <a href="/test/${job.job_id}">${job.job_id}</a>
    </div>
    %endfor
-
+    %if not jobs:
+    Nothing in my pile
+    %endif
    <h2>Running jobs</h2>
    %for job in running:
    <div>
-        <h3><a href="/test/${job.job_id}">${job.job_id}</a></h3>
-    </div>
+     <a href="/test/${job.job_id}">${job.job_id}</a>
+  </div>
    %endfor
+    %if not running:
+    I am bored !
+    %endif
 
 
   <h2>Failures</h2>
    %for job in failures:
    <div>
-      <h3><a href="/test/${job.job_id}">${job.job_id}</a></h3>
-      <pre>${get_result(job.job_id)[0]['data']}</pre>
+     ${job.job_id} &nbsp; <a href="/test/${job.job_id}">[Console]</a>
    </div>
    %endfor
+    %if not failures:
+    None, congrats!
+    %endif
 
 <h2>Successes</h2>
    %for job in successes:
    <div>
-      <h3><a href="/test/${job.job_id}">${job.job_id}</a></h3>
+     ${job.job_id} &nbsp; <a href="/test/${job.job_id}">[Console]</a>&nbsp;
+     <a href="/report/${job.job_id}/index.html">[Funkload Report]</a>
    </div>
    %endfor
 

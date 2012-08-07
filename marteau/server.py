@@ -56,20 +56,30 @@ def add_run():
 def _get_result(jobid):
     """Gets results from a run"""
     res = Template(filename=os.path.join(CURDIR, 'templates', 'console.mako'))
-
+    report = None
     status, console = queue.get_result(jobid)
+
     if status is None:
         status = 'Running'
     else:
         status = status['data']
+        if os.path.exists(status):
+            # we have a report
+            status = 'Finished.'
+            report = '/report/%s' % jobid
 
-    return res.render(status=status, console=console)
+    return res.render(status=status, console=console, report=report)
 
 
 @route('/report/<jobid>/<filename:path>')
-def download(jobid, filename):
+def report_dir(jobid, filename):
     path = os.path.join(reportsdir, jobid)
     return static_file(filename, root=path)
+
+
+@route('/report/<jobid>')
+def report_index(jobid):
+    return redirect('/report/%s/index.html' % jobid)
 
 
 app = app()
