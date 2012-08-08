@@ -44,3 +44,48 @@ a:hover {
   background-image: url("/media/fade.png") repeat-x scroll -70% 0px transparent;
 
 }
+
+#right {
+ float:right;
+}
+
+#workers {
+  margin-right: 5px;
+  padding: 12px;
+  border: 1px dotted rgb(203, 200, 185);
+  background: none repeat scroll 0% 0% rgb(246, 246, 242);
+}
+
+#workers span {
+  font-weight: bold;
+  font-size: 20px;
+}
+
+#workers div {
+  font-style: italic;
+  margin-top: 6px;
+}
+
+
+#pending {
+ float: left;
+ min-width: 300px;
+}
+
+#running {
+ float: left;
+ min-width: 300px;
+ margin-left: 15px;
+}
+
+#form {
+  margin-top: 10px;
+  border: 1px dotted rgb(203, 200, 185);
+  background: none repeat scroll 0% 0% rgb(246, 246, 242);
+  padding: 12px;
+  margin-right: 5px;
+}
+
+#form input[type="text"]  {
+  width: 300px;
+}
