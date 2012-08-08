@@ -1,15 +1,30 @@
 <%inherit file="base.mako"/>
 
 <div id="right">
-<div id="workers">
+<div id="workers" class="resource">
 <span>Workers</span>
 %for worker in workers:
 <div>${worker.worker_id} - Queues: ${", ".join(worker.queues)}</div>
 %endfor
 %if not workers:
+<div>
 Dude. No workers, no chocolate.
+</div>
 %endif
 </div>
+
+<div id="#nodes" class="resource">
+<span>Nodes</span> <a href="/nodes">manage</a>
+%for node in nodes:
+<div>${node.name} (${node.status})</div>
+%endfor
+%if not nodes:
+<div>
+C'mon, I need some boxes.
+</div>
+%endif
+</div>
+
 
 <div id="form">
 <form action="/test" method="POST">

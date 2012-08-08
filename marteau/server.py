@@ -4,6 +4,7 @@ from mako.lookup import TemplateLookup
 
 from marteau import queue
 from marteau.job import reportsdir
+from marteau.node import Node
 
 
 CURDIR = os.path.dirname(__file__)
@@ -19,6 +20,7 @@ def index():
     index = TMPLS.get_template('index.mako')
     return index.render(jobs=queue.get_jobs(),
                         workers=queue.get_workers(),
+                        nodes=list(queue.get_nodes()),
                         failures=queue.get_failures(),
                         successes=queue.get_successes(),
                         get_result=queue.get_result,
@@ -74,11 +76,28 @@ def _get_result(jobid):
     return res.render(status=status, console=console, report=report)
 
 
-
 @route('/nodes', method='GET')
 def _nodes():
     res = TMPLS.get_template('nodes.mako')
-    return res.render()
+    return res.render(nodes=list(queue.get_nodes()))
+
+
+@route('/nodes', method='POST')
+def add_node():
+    """Adds a run into Marteau"""
+    node = request.forms.get('name')
+    if node is None:
+        node = request.body.read()
+        rest = True
+    else:
+        rest = False
+
+    node = Node(name=node)
+    queue.save_node(node)
+    if not rest:
+        return redirect('/nodes')
+
+    return location
 
 
 @route('/media/<filename:path>')

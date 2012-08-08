@@ -2,6 +2,7 @@ import os
 import json
 
 from retools.queue import QueueManager, Worker, Job
+from marteau.node import Node
 
 
 _QM = None
@@ -21,6 +22,19 @@ def append_console(job_id, data):
     if current is not None:
         data = current + data
     _QM.redis.set(key, data)
+
+
+def get_nodes():
+    names = _QM.redis.smembers('retools:nodes')
+    for name in names:
+        node = _QM.redis.get('retools:node:%s' % name)
+        yield Node(**json.loads(node))
+
+def save_node(node):
+    names = _QM.redis.smembers('retools:nodes')
+    if node.name not in names:
+        _QM.redis.sadd('retools:nodes', node.name)
+    _QM.redis.set('retools:node:%s' % node.name, node.to_json())
 
 
 def purge_console(job_id):

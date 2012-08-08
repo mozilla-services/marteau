@@ -45,23 +45,29 @@ a:hover {
 
 }
 
+p {
+  font-style: italic;
+  color: grey;
+  font-size: 20px;
+}
+
 #right {
  float:right;
 }
 
-#workers {
+div.resource {
   margin-right: 5px;
   padding: 12px;
   border: 1px dotted rgb(203, 200, 185);
   background: none repeat scroll 0% 0% rgb(246, 246, 242);
 }
 
-#workers span {
+div.resource span {
   font-weight: bold;
   font-size: 20px;
 }
 
-#workers div {
+div.resource div {
   font-style: italic;
   margin-top: 6px;
 }
@@ -72,10 +78,32 @@ a:hover {
  min-width: 300px;
 }
 
+#workers {
+ margin-bottom: 10px;
+}
+
 #running {
  float: left;
  min-width: 300px;
  margin-left: 15px;
+}
+
+div.resource a {
+  float: right;
+}
+
+div.smallform {
+  width: 400px;
+  float: right;
+  margin-top: 10px;
+  border: 1px dotted rgb(203, 200, 185);
+  background: none repeat scroll 0% 0% rgb(246, 246, 242);
+  padding: 12px;
+  margin-right: 5px;
+}
+
+div.smallform input[type="text"]  {
+  width: 300px;
 }
 
 #form {
