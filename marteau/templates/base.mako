@@ -7,9 +7,13 @@
 
   </head>
   <body>
-   <h1>Marteau</h1>
+   <div id="header">   
+       <a href="/" id="title">Marteau</a>
+       <span id="subtitle">Hammering your web services since 2012</span>
+   </div>
+   <div id="body">
         ${self.body()}
-
+   </div>
 
   </body>
 </html>
