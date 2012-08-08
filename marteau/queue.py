@@ -24,6 +24,11 @@ def append_console(job_id, data):
     _QM.redis.set(key, data)
 
 
+def get_node(name):
+    data = _QM.redis.get('retools:node:%s' % name)
+    return Node(**json.loads(data))
+
+
 def get_nodes():
     names = _QM.redis.smembers('retools:nodes')
     for name in names:
@@ -68,7 +73,6 @@ def starting(job=None):
     job.redis.set('retools:job:%s' % job.job_id, job.to_json())
     job.redis.set('retools:jobpid:%s' % str(os.getpid()), job.job_id)
 
-
 def success(job=None, result=None):
     pl = job.redis.pipeline()
     result = json.dumps({'data': result})
@@ -79,10 +83,21 @@ def success(job=None, result=None):
     pl.lpush('retools:result:%s' % job.job_id, result)
     pl.expire('retools:result:%s', 3600)
     pl.sadd('retools:consoles', job.job_id)
+    nodes = os.environ.get('MARTEAU_NODES')
+    if nodes is not None:
+        nodes = nodes.split(',')
+        for name in nodes:
+            node = get_node(name)
+            node.status = 'idle'
+            save_node(node)
+
     pl.execute()
 
 
 def failure(job=None, exc=None):
+    # depending on the failure we might requeue it with a
+    # delay, using job.enqueue()
+    # XXX
     pl = job.redis.pipeline()
     exc = json.dumps({'data': str(exc)})
     pl.srem('retools:started', job.job_id)
@@ -92,6 +107,13 @@ def failure(job=None, exc=None):
     pl.lpush('retools:result:%s' % job.job_id, exc)
     pl.sadd('retools:consoles', job.job_id)
     pl.expire('retools:result:%s', 3600)
+    nodes = os.environ.get('MARTEAU_NODES')
+    if nodes is not None:
+        nodes = nodes.split(',')
+        for name in nodes:
+            node = get_node(name)
+            node.status('idle')
+            save_node(node)
     pl.execute()
 
 
@@ -104,7 +126,9 @@ def purge():
         _QM.redis.delete('retools:jobconsole:%s' % job_id)
     _QM.redis.delete('retools:consoles')
     _QM.redis.delete('retools:started')
-
+    for node in get_nodes():
+        node.status = 'idle'
+        save_node(node)
 
 def initialize():
     global _QM

@@ -1,3 +1,4 @@
+import random
 import os
 import subprocess
 import sys
@@ -92,11 +93,30 @@ def run_loadtest(repo):
         run_func(run_pip + ' install %s' % dep)
 
     # is this a distributed test ?
-    nodes = config.get('nodes', [])
-    distributed = nodes != []
+    nodes_count = config.get('nodes', 1)
+    distributed = nodes_count > 1
 
     if distributed:
-        workers = ','.join(nodes)
+        # we want to pick up the number of nodes asked
+        nodes = [node for node in queue.get_nodes()
+                 if node.status == 'idle']
+
+        if len(nodes) < nodes_count:
+            # XXX we want to pile this one back !
+            raise ValueError("Sorry could not find enough free nodes")
+
+        # then pick random ones
+        random.shuffle(nodes)
+        nodes = nodes[:nodes_count]
+
+        # save the nodes status
+        for node in nodes:
+            node.status = 'working'
+            queue.save_node(node)
+
+        workers = ','.join([node.name for node in nodes])
+        os.environ['MARTEAU_NODES'] = workers
+
         workers = '--distribute-workers=%s' % workers
         cmd = '%s --distribute %s' % (run_bench, workers)
         if deps != []:
