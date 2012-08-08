@@ -1,19 +1,22 @@
 import os
 from bottle import app, route, request, redirect, static_file
-from mako.template import Template
+from mako.lookup import TemplateLookup
 
 from marteau import queue
 from marteau.job import reportsdir
 
 
 CURDIR = os.path.dirname(__file__)
+MEDIADIR = os.path.join(CURDIR, 'media')
+TMPLDIR = os.path.join(CURDIR, 'templates')
+TMPLS = TemplateLookup(directories=[TMPLDIR])
 JOBTIMEOUT = 3600    # one hour
 queue.initialize()
 
 
 @route('/', method='GET')
 def index():
-    index = Template(filename=os.path.join(CURDIR, 'templates', 'index.mako'))
+    index = TMPLS.get_template('index.mako')
     return index.render(jobs=queue.get_jobs(),
                         workers=queue.get_workers(),
                         failures=queue.get_failures(),
@@ -55,7 +58,7 @@ def add_run():
 @route('/test/<jobid>', method='GET')
 def _get_result(jobid):
     """Gets results from a run"""
-    res = Template(filename=os.path.join(CURDIR, 'templates', 'console.mako'))
+    res = TMPLS.get_template('console.mako')
     report = None
     status, console = queue.get_result(jobid)
 
@@ -69,6 +72,18 @@ def _get_result(jobid):
             report = '/report/%s' % jobid
 
     return res.render(status=status, console=console, report=report)
+
+
+
+@route('/nodes', method='GET')
+def _nodes():
+    res = TMPLS.get_template('nodes.mako')
+    return res.render()
+
+
+@route('/media/<filename:path>')
+def report_dir(filename):
+    return static_file(filename, root=MEDIADIR)
 
 
 @route('/report/<jobid>/<filename:path>')
