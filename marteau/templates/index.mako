@@ -32,6 +32,7 @@ C'mon, I need some boxes.
     <input type="submit"/>
 </form>
 </div>
+<img src="/media/marteau.gif"/>
 
 </div>
 
