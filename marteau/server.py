@@ -1,4 +1,7 @@
 import os
+import time
+import datetime
+
 from bottle import app, route, request, redirect, static_file
 from mako.lookup import TemplateLookup
 
@@ -15,6 +18,12 @@ JOBTIMEOUT = 3600    # one hour
 queue.initialize()
 
 
+def time2str(data):
+    if data is None:
+        return 'Unknown date'
+    return datetime.datetime.fromtimestamp(data).strftime('%Y-%m-%d %H:%M:%S')
+
+
 @route('/', method='GET')
 def index():
     index = TMPLS.get_template('index.mako')
@@ -24,7 +33,8 @@ def index():
                         failures=queue.get_failures(),
                         successes=queue.get_successes(),
                         get_result=queue.get_result,
-                        running=queue.get_running_jobs())
+                        running=queue.get_running_jobs(),
+                        time2str=time2str)
 
 
 @route('/purge', method='GET')
@@ -50,7 +60,11 @@ def add_run():
     else:
         rest = False
 
-    job_id = queue.enqueue('marteau.job:run_loadtest', repo=repo)
+    metadata = {'created': time.time(),
+                'repo': repo}
+
+    job_id = queue.enqueue('marteau.job:run_loadtest', repo=repo,
+                           metadata=metadata)
     if not rest:
         return redirect('/')
 
@@ -85,23 +99,23 @@ def _nodes():
 @route('/nodes', method='POST')
 def add_node():
     """Adds a run into Marteau"""
-    node = request.forms.get('name')
-    if node is None:
-        node = request.body.read()
+    node_name = request.forms.get('name')
+    if node_name is None:
+        node_name = request.body.read()
         rest = True
     else:
         rest = False
 
-    node = Node(name=node)
+    node = Node(name=node_name)
     queue.save_node(node)
     if not rest:
         return redirect('/nodes')
 
-    return location
+    return node_name
 
 
 @route('/media/<filename:path>')
-def report_dir(filename):
+def media_dir(filename):
     return static_file(filename, root=MEDIADIR)
 
 

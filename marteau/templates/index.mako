@@ -40,7 +40,7 @@ C'mon, I need some boxes.
 <h2>Pending jobs</h2>
 %for job in jobs:
 <div>
-<a href="/test/${job.job_id}">${job.job_id}</a>
+<a href="/test/${job.job_id}">${job.metadata.get('repo', job.job_id)}</a> created at ${time2str(job.metadata.get('created'))}
 </div>
 %endfor
 %if not jobs:
@@ -52,7 +52,7 @@ Nothing in my pile.
 <h2>Running jobs</h2>
 %for job in running:
 <div>
-    <a href="/test/${job.job_id}">${job.job_id}</a>
+    <a href="/test/${job.job_id}">${job.metadata.get('repo', job.job_id)}</a> started at ${time2str(job.metadata.get('started'))}
 </div>
 %endfor
 %if not running:
@@ -67,7 +67,7 @@ I am bored !
 <table>
 %for job in failures:
 <tr>
-  <td>${job.job_id}</td>
+  <td>${job.metadata.get('repo', job.job_id)} ended at ${time2str(job.metadata.get('ended'))}</td>
   <td><a href="/test/${job.job_id}">[Console]</a></td>
 </tr>
 %endfor
@@ -78,13 +78,20 @@ None, congrats! &mdash; although that's suspicious.
 %endif
 
 <h2>Successes</h2>
+%if successes:
 <table>
 %for job in successes:
 <tr>
-  <td>${job.job_id}</td>
+  <td>${job.metadata.get('repo', job.job_id)} ended at ${time2str(job.metadata.get('created'))}</td>
   <td><a href="/test/${job.job_id}">[Console]</a></td>
   <td><a href="/report/${job.job_id}/index.html">[Funkload Report]</a></td>
 </tr>
 %endfor
 </table>
+%endif
+
+%if not successes:
+None, this worries me.
+%endif
+
 

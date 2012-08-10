@@ -1,3 +1,4 @@
+import time
 import os
 import json
 
@@ -35,6 +36,7 @@ def get_nodes():
         node = _QM.redis.get('retools:node:%s' % name)
         yield Node(**json.loads(node))
 
+
 def save_node(node):
     names = _QM.redis.smembers('retools:nodes')
     if node.name not in names:
@@ -69,12 +71,15 @@ def get_successes():
 
 def starting(job=None):
     os.environ['MARTEAU_JOBID'] = job.job_id
+    job.metadata['started'] = time.time()
     job.redis.sadd('retools:started', job.job_id)
     job.redis.set('retools:job:%s' % job.job_id, job.to_json())
     job.redis.set('retools:jobpid:%s' % str(os.getpid()), job.job_id)
 
+
 def success(job=None, result=None):
     pl = job.redis.pipeline()
+    job.metadata['ended'] = time.time()
     result = json.dumps({'data': result})
     pl.srem('retools:started', job.job_id)
     pl.delete('retools:job:%s' % job.job_id)
@@ -99,6 +104,7 @@ def failure(job=None, exc=None):
     # delay, using job.enqueue()
     # XXX
     pl = job.redis.pipeline()
+    job.metadata['ended'] = time.time()
     exc = json.dumps({'data': str(exc)})
     pl.srem('retools:started', job.job_id)
     pl.delete('retools:job:%s' % job.job_id)
@@ -112,7 +118,7 @@ def failure(job=None, exc=None):
         nodes = nodes.split(',')
         for name in nodes:
             node = get_node(name)
-            node.status('idle')
+            node.status = 'idle'
             save_node(node)
     pl.execute()
 
@@ -120,15 +126,24 @@ def failure(job=None, exc=None):
 def purge():
     for queue in _QM.redis.smembers('retools:queues'):
         _QM.redis.delete('retools:queue:%s' % queue)
+
+    for job_id in _QM.redis.smembers('retools:queue:started'):
+        _QM.redis.delete('retools:job:%s' % job_id)
+        _QM.redis.delete('retools:jobpid:%s' % job_id)
+
     _QM.redis.delete('retools:queue:failures')
+    _QM.redis.delete('retools:queue:successes')
     _QM.redis.delete('retools:queue:starting')
+
     for job_id in _QM.redis.smembers('retools:consoles'):
         _QM.redis.delete('retools:jobconsole:%s' % job_id)
+
     _QM.redis.delete('retools:consoles')
     _QM.redis.delete('retools:started')
     for node in get_nodes():
         node.status = 'idle'
         save_node(node)
+
 
 def initialize():
     global _QM
