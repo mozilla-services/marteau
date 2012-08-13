@@ -1,3 +1,4 @@
+import socket
 import urllib
 import os
 import time
@@ -134,7 +135,7 @@ def test_node(name):
     credentials = {}
 
     if username is not None and ':' in username:
-        username, password = user.split(':', 1)
+        username, password = username.split(':', 1)
         credentials = {"username": username, "password": password}
     elif username is not None:
         password = None
