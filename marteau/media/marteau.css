@@ -118,3 +118,31 @@ div.smallform input[type="text"]  {
 #form input[type="text"]  {
   width: 300px;
 }
+
+table.nodes {
+ text-align: center;
+ font-weight: normal;
+ color: #404040;
+ background: none repeat scroll 0% 0% rgb(246, 246, 242);
+ border: 1px dotted rgb(203, 200, 185);
+ border-collapse: collapse;
+ border-spacing: 10px;
+ padding: 10px;
+ min-width: 500px;
+}
+
+table.nodes th {
+    border-bottom: 1px dotted #6699CC;
+    color: #404040;
+    text-align: center;
+    padding: 5px;
+    background-color: white;
+}
+
+table.nodes td {
+    border-bottom: 1px dotted #6699CC;
+    color: #404040;
+    text-align: center;
+    padding: 5px;
+
+}

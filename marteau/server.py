@@ -105,6 +105,27 @@ def _nodes():
     return res.render(nodes=list(queue.get_nodes()))
 
 
+@route('/nodes/<name>/enable', method='GET')
+def enable_node(name):
+    # load existing
+    node = queue.get_node(name)
+
+    # update the flag
+    node.enabled = not node.enabled
+
+    queue.save_node(node)
+    redirect('/nodes')
+
+
+@route('/nodes/<name>', method='GET')
+def del_node(name):
+    if 'delete' in request.query:
+        queue.delete_node(name)
+        redirect('/nodes')
+
+    return queue.get_node(name)
+
+
 @route('/nodes', method='POST')
 def add_node():
     """Adds a run into Marteau"""

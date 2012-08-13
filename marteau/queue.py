@@ -30,6 +30,13 @@ def get_node(name):
     return Node(**json.loads(data))
 
 
+def delete_node(name):
+    if not _QM.redis.sismember('retools:nodes', name):
+        return
+    _QM.redis.srem('retools:nodes', name)
+    _QM.redis.delete('retools:node:%s' % name)
+
+
 def get_nodes():
     names = _QM.redis.smembers('retools:nodes')
     for name in names:

@@ -17,24 +17,32 @@
     Nooooo.... No nodes!
     %endif
     %if nodes:
-    <table>
+    <table class="nodes">
         <tr>
             <th>Name</th>
-            <th>Enabled</th>
+            <th>Enabled?</th>
             <th>Status</th>
+            <th/>
         </tr>
         %for node in nodes:
         <tr>
             <td>${node.name}</td>
             <td>
+            <a href="/nodes/${node.name}/enable">
               %if node.enabled:
-              Enabled.
+              Enabled
               %endif
                %if not node.enabled:
-              Disabled.
+              Disabled
               %endif
+              </a>
             </td>
             <td>${node.status}</td>
+            <td>
+              <form action="/nodes/${node.name}" method='DELETE'>
+                <input type="submit" name="delete" value="delete"/>
+              </form>
+            </td>
         </tr>
         %endfor
     </table>
