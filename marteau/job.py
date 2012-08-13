@@ -65,7 +65,7 @@ run_pip = "%s -c 'from pip import runner; runner.run()'"
 run_pip = run_pip % sys.executable
 
 
-def run_loadtest(repo):
+def run_loadtest(repo, cycles=None, nodes_count=None, duration=None):
     if os.path.exists(repo):
         # just a local dir, lets work there
         os.chdir(repo)
@@ -98,7 +98,9 @@ def run_loadtest(repo):
         run_func(run_pip + ' install %s' % dep)
 
     # is this a distributed test ?
-    nodes_count = config.get('nodes', 1)
+    if nodes_count is None:
+        nodes_count = config.get('nodes', 1)
+
     distributed = nodes_count > 1
 
     if distributed:
@@ -133,6 +135,12 @@ def run_loadtest(repo):
     else:
         cmd = run_bench
         target = config['xml']
+
+    if cycles is not None:
+        cmd += ' --cycles=%s' % cycles
+
+    if duration is not None:
+        cmd += ' --duration=%s' % duration
 
     report_dir = os.path.join(reportsdir,
             os.environ.get('MARTEAU_JOBID', 'report'))

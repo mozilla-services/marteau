@@ -56,20 +56,26 @@ def get_all_jobs():
 @route('/test', method='POST')
 def add_run():
     """Adds a run into Marteau"""
+    # XXX should use colander here
     repo = request.forms.get('repo')
-    if repo is None:
-        repo = request.body.read()
-        rest = True
-    else:
-        rest = False
+    redirect_url = request.forms.get('redirect_url')
+    cycles = request.forms.get('cycles')
+    duration = request.forms.get('duration')
+    if duration is not None:
+        duration = int(duration)
+
+    nodes = request.forms.get('nodes')
+    if nodes is not None:
+        nodes = int(nodes)
 
     metadata = {'created': time.time(),
                 'repo': repo}
 
     job_id = queue.enqueue('marteau.job:run_loadtest', repo=repo,
+                           cycles=cycles, nodes_count=nodes, duration=duration,
                            metadata=metadata)
-    if not rest:
-        return redirect('/')
+    if redirect_url is not None:
+        return redirect(redirect_url)
 
     return job_id
 

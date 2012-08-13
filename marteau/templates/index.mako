@@ -19,10 +19,10 @@ Dude. No workers, no chocolate.
 %endif
 </div>
 
-<div id="#nodes" class="resource">
+<div id="nodes" class="resource">
 <span>Nodes</span> <a href="/nodes">manage</a>
 %for node in nodes:
-<div>${node.name} (${node.status})</div>
+<div>${node.name}</div>
 %endfor
 %if not nodes:
 <div>
@@ -32,10 +32,33 @@ C'mon, I need some boxes.
 </div>
 
 
-<div id="form">
+<div id="form" class="resource">
 <form action="/test" method="POST">
-    Add a job. Repo: <input type="text" name="repo"/>
+ <input type="hidden" name="redirect_url" value="/"/>
+
+ <span>Add a job</span>
+<table>
+    <tr>
+      <td>Repo</td>
+      <td><input type="text" name="repo"/></td>
+    </tr>
+    <tr>
+      <td>Cycles*</td>
+      <td><input type="text" name="cycles"/></td>
+    </tr>
+    <tr>
+     <td>Duration*</td>
+     <td><input type="text" name="duration"/></td>
+    </tr>
+    <tr>
+      <td>Nodes*</td>
+      <td><input type="text" name="nodes"/></td>
+    </tr>
+
+</table>
     <input type="submit"/>
+    <div><italic>*optional</italic></div>
+
 </form>
 </div>
 
