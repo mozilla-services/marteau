@@ -73,8 +73,13 @@ def run_loadtest(repo):
         # checking out the repo
         os.chdir(workdir)
         name = repo.split('/')[-1].split('.')[0]
-        run_func('git clone %s' % repo, stop_on_failure=False)
-        os.chdir(os.path.join(workdir, name))
+        target = os.path.join(workdir, name)
+        if os.path.exists(target):
+            os.chdir(target)
+            run_func('git pull')
+        else:
+            run_func('git clone %s' % repo, stop_on_failure=False)
+            os.chdir(target)
 
     # now looking for the marteau config file in there
     config = read_config(os.getcwd())
