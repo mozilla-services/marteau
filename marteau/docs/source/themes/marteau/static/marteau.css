@@ -26,14 +26,20 @@ body {
 
 /* Page layout */
 
-div.header, div.content, div.footer {
+div.content, div.footer {
   width: 70em;
   margin-left: auto;
   margin-right: auto;
 }
 
+div.header {
+ padding-left: 20px;
+ padding-top: 2px; 
+}
+
 div.header-wrapper {
-  background: url(bgtop.png) top left repeat-x;
+  /*background: url(bgtop.png) top left repeat-x;*/
+  background-image: url("/media/head.png");
   border-bottom: 3px solid #2e3436;
 }
 
@@ -72,7 +78,7 @@ div.bodywrapper a, div.footer a {
 }
 
 h1, h2, h3, h4 {
-  font-family: "Georgia", "Times New Roman", serif;
+  font-family: "Quando", "Times New Roman", serif;
   font-weight: normal;
   color: #3465a4;
   margin-bottom: .8em;
@@ -131,7 +137,7 @@ div.header {
 }
 
 div.header .headertitle {
-  font-family: "Georgia", "Times New Roman", serif;
+  font-family: "Quando", "Times New Roman", serif;
   font-weight: normal;
   font-size: 180%;
   letter-spacing: .08em;
@@ -143,7 +149,7 @@ div.header .headertitle a {
 }
 
 div.header div.rel {
-  margin-top: 1em;
+  margin-top: 2em;
 }
 
 div.header div.rel a {
@@ -164,6 +170,7 @@ img.logo {
 /* Content */
 div.content-wrapper {
   background-color: white;
+  background-image: url("/media/fade.png") repeat-x scroll -70% 0px transparent; 
   padding-top: 20px;
   padding-bottom: 20px;
 }

@@ -1,6 +1,12 @@
 <%inherit file="base.mako"/>
 
 <div id="right">
+<div class="resource">
+<span>Help</span>
+<a href="/docs">Learn how to write a Marteau test</a>
+</div>
+
+
 <div id="workers" class="resource">
 <span>Workers</span>
 %for worker in workers:
@@ -32,7 +38,6 @@ C'mon, I need some boxes.
     <input type="submit"/>
 </form>
 </div>
-<img src="/media/marteau.gif"/>
 
 </div>
 
