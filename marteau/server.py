@@ -1,9 +1,11 @@
+import urllib
 import os
 import time
 import datetime
 
 from bottle import app, route, request, redirect, static_file
 from mako.lookup import TemplateLookup
+import paramiko
 
 from marteau import queue
 from marteau.job import reportsdir
@@ -115,6 +117,34 @@ def enable_node(name):
 
     queue.save_node(node)
     redirect('/nodes')
+
+
+@route('/nodes/<name>/test', method='GET')
+def test_node(name):
+    # trying an ssh connection
+    connection = paramiko.client.SSHClient()
+    connection.load_system_host_keys()
+    connection.set_missing_host_key_policy(paramiko.WarningPolicy())
+
+    host, port = urllib.splitport(name)
+    if port is None:
+        port = 22
+
+    username, host = urllib.splituser(host)
+    credentials = {}
+
+    if username is not None and ':' in username:
+        username, password = user.split(':', 1)
+        credentials = {"username": username, "password": password}
+    elif username is not None:
+        password = None
+        credentials = {"username": username}
+
+    try:
+        connection.connect(host, port=port, timeout=5, **credentials)
+        return 'Connection to %r : OK' % name
+    except (socket.gaierror, socket.timeout), error:
+        return str(error)
 
 
 @route('/nodes/<name>', method='GET')

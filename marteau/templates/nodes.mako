@@ -23,6 +23,7 @@
             <th>Enabled?</th>
             <th>Status</th>
             <th/>
+            <th/>
         </tr>
         %for node in nodes:
         <tr>
@@ -39,8 +40,13 @@
             </td>
             <td>${node.status}</td>
             <td>
+              <form action="/nodes/${node.name}/test" method='GET' target="_blank">
+                <input type="submit" name="test" value="test connection"/>
+              </form>
+            </td>
+            <td>
               <form action="/nodes/${node.name}" method='DELETE'>
-                <input type="submit" name="delete" value="delete"/>
+                <input type="submit" name="delete" value="remove"/>
               </form>
             </td>
         </tr>
