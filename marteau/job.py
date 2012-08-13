@@ -136,8 +136,14 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None):
         cmd = run_bench
         target = config['xml']
 
+    if cycles is None:
+        cycles = config.get('cycles')
+
     if cycles is not None:
         cmd += ' --cycles=%s' % cycles
+
+    if duration is None:
+        duration = config.get('duration')
 
     if duration is not None:
         cmd += ' --duration=%s' % duration
