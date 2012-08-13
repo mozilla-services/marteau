@@ -1,22 +1,56 @@
-.. marteau documentation master file, created by
-   sphinx-quickstart on Mon Aug 13 12:48:36 2012.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+Introduction
+============
 
-Welcome to marteau's documentation!
-===================================
+**Marteau** is based on `Funkload <http://funkload.nuxeo.org/>`_, which is a
+functional and load web tester based on Python.
 
-Contents:
+The main features of Funkload are:
 
-.. toctree::
-   :maxdepth: 2
+- load tests are plain Python unit tests class
+- everything can be run from the command-line
+- you can run the load test locally or distributed across many nodes
+- nice HTML reports are generated
+
+**Marteau** is just a Redis-based queue that let you run distributed Funkload
+load tests through the web.
+
+**Marteau** features are:
+
+- management of a list of nodes
+- management of a list of workers
+- enqueues load tests and drives Funkload to run them
+- display successes, failures and Funkload reports
 
 
+How to create a Marteau Load Test
+=================================
 
-Indices and tables
-==================
+Creating a load test for marteau is done in two steps:
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+- create a Funkload load test - composed of a module and a configuration file
+- create a **.marteau.yml** file, that will be used by Marteau as the
+  entry point.
+
+
+Create a Funkload test
+----------------------
+
+Just follow Funkload `tutorial <http://funkload.nuxeo.org/tutorial.html>`_
+
+
+Create a Marteau configuration file
+-----------------------------------
+
+XXX
+
+Try it locally
+--------------
+
+XXX
+
+Run it on a Marteau server
+--------------------------
+
+XXX
+
 
