@@ -101,40 +101,34 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None):
     if nodes_count is None:
         nodes_count = config.get('nodes', 1)
 
-    distributed = nodes_count > 1
+    # we want to pick up the number of nodes asked
+    nodes = [node for node in queue.get_nodes()
+                if node.status == 'idle']
 
-    if distributed:
-        # we want to pick up the number of nodes asked
-        nodes = [node for node in queue.get_nodes()
-                 if node.status == 'idle']
+    if len(nodes) < nodes_count:
+        # XXX we want to pile this one back !
+        raise ValueError("Sorry could not find enough free nodes")
 
-        if len(nodes) < nodes_count:
-            # XXX we want to pile this one back !
-            raise ValueError("Sorry could not find enough free nodes")
+    # then pick random ones
+    random.shuffle(nodes)
+    nodes = nodes[:nodes_count]
 
-        # then pick random ones
-        random.shuffle(nodes)
-        nodes = nodes[:nodes_count]
+    # save the nodes status
+    for node in nodes:
+        node.status = 'working'
+        queue.save_node(node)
 
-        # save the nodes status
-        for node in nodes:
-            node.status = 'working'
-            queue.save_node(node)
+    workers = ','.join([node.name for node in nodes])
+    os.environ['MARTEAU_NODES'] = workers
 
-        workers = ','.join([node.name for node in nodes])
-        os.environ['MARTEAU_NODES'] = workers
+    workers = '--distribute-workers=%s' % workers
+    cmd = '%s --distribute %s' % (run_bench, workers)
+    if deps != []:
+        cmd += ' --distributed-packages=%s' % ' '.join(deps)
 
-        workers = '--distribute-workers=%s' % workers
-        cmd = '%s --distribute %s' % (run_bench, workers)
-        if deps != []:
-            cmd += ' --distributed-packages=%s' % ' '.join(deps)
-
-        target = tempfile.mkdtemp()
-        cmd += ' --distributed-log-path=%s' % target
-        target = os.path.join(target, '*.xml')
-    else:
-        cmd = run_bench
-        target = config['xml']
+    target = tempfile.mkdtemp()
+    cmd += ' --distributed-log-path=%s' % target
+    target = os.path.join(target, '*.xml')
 
     if cycles is None:
         cycles = config.get('cycles')
