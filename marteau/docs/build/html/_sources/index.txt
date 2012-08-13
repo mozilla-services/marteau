@@ -43,5 +43,14 @@ Create a Marteau configuration file
 
 XXX
 
+Try it locally
+--------------
+
+XXX
+
+Run it on a Marteau server
+--------------------------
+
+XXX
 
 
