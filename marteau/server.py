@@ -15,6 +15,9 @@ MEDIADIR = os.path.join(CURDIR, 'media')
 TMPLDIR = os.path.join(CURDIR, 'templates')
 TMPLS = TemplateLookup(directories=[TMPLDIR])
 JOBTIMEOUT = 3600    # one hour
+DOCDIR = os.path.join(CURDIR, 'docs', 'build', 'html')
+
+
 queue.initialize()
 
 
@@ -114,6 +117,7 @@ def add_node():
     return node_name
 
 
+
 @route('/media/<filename:path>')
 def media_dir(filename):
     return static_file(filename, root=MEDIADIR)
@@ -128,6 +132,16 @@ def report_dir(jobid, filename):
 @route('/report/<jobid>')
 def report_index(jobid):
     return redirect('/report/%s/index.html' % jobid)
+
+
+@route('/docs/<filename:path>')
+def doc_dir(filename):
+    return static_file(filename, root=DOCDIR)
+
+
+@route('/docs')
+def doc_index():
+    return redirect('/docs/index.html')
 
 
 app = app()

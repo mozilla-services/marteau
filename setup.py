@@ -1,3 +1,4 @@
+import os
 from setuptools import setup, find_packages
 from marteau import __version__
 
@@ -5,13 +6,30 @@ from marteau import __version__
 install_requires = ['funkload', 'bottle',
                     'circus', 'PyYAML', 'paramiko',
                     'Mako', 'retools',
-                    'virtualenv']
+                    'virtualenv', 'Sphinx']
+
+DOCS = os.path.join(os.path.dirname(__file__), 'marteau', 'docs', 'source')
+BUILD = os.path.join(os.path.dirname(__file__), 'marteau', 'docs', 'build')
 
 
 try:
     import argparse     # NOQA
 except ImportError:
     install_requires.append('argparse')
+
+try:
+    from sphinx.setup_command import BuildDoc
+
+    kwargs = {'cmdclass': {'build_sphinx': BuildDoc},
+            'command_options': {'build_sphinx':
+                        {'project': ('setup.py', 'marteau'),
+                        'version': ('setup.py', __version__),
+                        'release': ('setup.py', __version__),
+                        'source_dir': ('setup.py', DOCS),
+                        'build_dir': ('setup.py', BUILD)}}}
+
+except ImportError:
+    kwargs = {}
 
 
 with open('README.rst') as f:
@@ -38,4 +56,4 @@ setup(name='marteau',
       [console_scripts]
       marteau-serve = marteau.runserver:main
       marteau = marteau.job:main
-      """)
+      """, **kwargs)
