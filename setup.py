@@ -5,7 +5,7 @@ from marteau import __version__
 
 install_requires = ['funkload', 'bottle',
                     'circus', 'PyYAML', 'paramiko',
-                    'Mako', 'retools',
+                    'Mako', 'retools', 'iowait',
                     'virtualenv', 'Sphinx']
 
 DOCS = os.path.join(os.path.dirname(__file__), 'marteau', 'docs', 'source')

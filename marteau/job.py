@@ -34,13 +34,13 @@ def _logrun(msg, eol=True):
     if eol:
         msg += '\n'
     sys.stdout.write(msg)
-    #sys.stdout.flush()
+    sys.stdout.flush()
     job_id = queue.pid_to_jobid(os.getpid())
     if job_id is not None:
         queue.append_console(job_id, msg)
     else:
         sys.stdout.write('Could not push to redis\n')
-        #sys.stdout.flush()
+        sys.stdout.flush()
 
 
 def _stream(data):
@@ -49,6 +49,8 @@ def _stream(data):
 
 def run_func(cmd, stop_on_failure=True):
     redirector = Redirector(_stream)
+    redirector.start()
+
     _logrun(cmd)
 
     try:
@@ -57,7 +59,6 @@ def run_func(cmd, stop_on_failure=True):
                 stderr=subprocess.PIPE)
         redirector.add_redirection('marteau-stdout', process, process.stdout)
         redirector.add_redirection('marteau-stderr', process, process.stderr)
-        redirector.start()
         process.wait()
 
         res = process.returncode
