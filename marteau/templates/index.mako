@@ -54,6 +54,10 @@ C'mon, I need some boxes.
       <td>Nodes*</td>
       <td><input type="text" name="nodes"/></td>
     </tr>
+    <tr>
+      <td>E-Mail to notify*</td>
+      <td><input type="text" name="email"/></td>
+    </tr>
 
 </table>
     <input type="submit"/>

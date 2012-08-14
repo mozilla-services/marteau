@@ -3,6 +3,7 @@ import urllib
 import os
 import time
 import datetime
+from ConfigParser import NoSectionError
 
 from bottle import app, route, request, redirect, static_file
 from mako.lookup import TemplateLookup
@@ -62,21 +63,40 @@ def add_run():
     # XXX should use colander here
     repo = request.forms.get('repo')
     redirect_url = request.forms.get('redirect_url')
+
     cycles = request.forms.get('cycles')
+    if cycles == '':
+        cycles = None
+
     duration = request.forms.get('duration')
-    if duration is not None:
+    if duration != '':
         duration = int(duration)
+    else:
+        duration = None
 
     nodes = request.forms.get('nodes')
-    if nodes is not None:
+    if nodes != '':
         nodes = int(nodes)
+    else:
+        nodes = None
+
+    email = request.forms.get('email')
+    if email == '':
+        email = None
 
     metadata = {'created': time.time(),
                 'repo': repo}
 
+    try:
+        options = dict(app.config.items('marteau'))
+    except NoSectionError:
+        options = {}
+
     job_id = queue.enqueue('marteau.job:run_loadtest', repo=repo,
                            cycles=cycles, nodes_count=nodes, duration=duration,
-                           metadata=metadata)
+                           metadata=metadata, email=email,
+                           options=options)
+
     if redirect_url is not None:
         return redirect(redirect_url)
 
@@ -202,4 +222,6 @@ def doc_index():
     return redirect('/docs/index.html')
 
 
+# loading the app
 app = app()
+

@@ -2,41 +2,19 @@ import fcntl
 import argparse
 import sys
 import logging
+from ConfigParser import ConfigParser
 
 from bottle import run
 
 from marteau import __version__, logger
 from marteau.server import app
-
-
-LOG_LEVELS = {
-    "critical": logging.CRITICAL,
-    "error": logging.ERROR,
-    "warning": logging.WARNING,
-    "info": logging.INFO,
-    "debug": logging.DEBUG}
-
-LOG_FMT = r"%(asctime)s [%(process)d] [%(levelname)s] %(message)s"
-LOG_DATE_FMT = r"%Y-%m-%d %H:%M:%S"
+from marteau.util import LOG_LEVELS, configure_logger
 
 
 def close_on_exec(fd):
     flags = fcntl.fcntl(fd, fcntl.F_GETFD)
     flags |= fcntl.FD_CLOEXEC
     fcntl.fcntl(fd, fcntl.F_SETFD, flags)
-
-
-def configure_logger(logger, level='INFO', output="-"):
-    loglevel = LOG_LEVELS.get(level.lower(), logging.INFO)
-    logger.setLevel(loglevel)
-    if output == "-":
-        h = logging.StreamHandler()
-    else:
-        h = logging.FileHandler(output)
-        close_on_exec(h.stream.fileno())
-    fmt = logging.Formatter(LOG_FMT, LOG_DATE_FMT)
-    h.setFormatter(fmt)
-    logger.addHandler(h)
 
 
 def main():
@@ -62,6 +40,13 @@ def main():
 
     # configure the logger
     configure_logger(logger, args.loglevel, args.logoutput)
+
+    # loading the config file
+    config = ConfigParser()
+    if args.config is not None:
+        logger.info('Loading %r' % args.config)
+        config.read([args.config])
+    app.config = config
 
     logger.info('Hammer ready. Where are the nails ?')
     try:

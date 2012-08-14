@@ -11,7 +11,8 @@ import tempfile
 from marteau import __version__, logger
 from marteau.config import read_config
 from marteau.redirector import Redirector
-from marteau import queue
+from marteau import queue, logger
+from marteau.util import send_report, configure_logger
 
 
 workdir = '/tmp'
@@ -65,7 +66,13 @@ run_pip = "%s -c 'from pip import runner; runner.run()'"
 run_pip = run_pip % sys.executable
 
 
-def run_loadtest(repo, cycles=None, nodes_count=None, duration=None):
+def run_loadtest(repo, cycles=None, nodes_count=None, duration=None, email=None,
+                 options=None):
+    configure_logger(logger, 'DEBUG', '-')
+
+    if options is None:
+        options = {}
+
     if os.path.exists(repo):
         # just a local dir, lets work there
         os.chdir(repo)
@@ -145,8 +152,30 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None):
     report_dir = os.path.join(reportsdir,
             os.environ.get('MARTEAU_JOBID', 'report'))
 
+    logger.info('Running the loadtest')
     run_func('%s %s %s' % (cmd, config['script'], config['test']))
+
+    logger.info('Building the report')
     run_func(run_report + ' --html -r %s  %s' % (report_dir, target))
+
+    # do we send an email with the result ?
+    if email is None:
+        email = config.get('email')
+
+    if email is not None:
+        logger.info('Sending an e-mail to %r' % email)
+        try:
+            res, msg = send_report(email, os.environ.get('MARTEAU_JOBID'),
+                                   **options)
+        except Exception, e:
+            res = False
+            msg = str(e)
+
+        if not res:
+            logger.debug(msg)
+        else:
+            logger.debug('Mail sent.')
+
     return report_dir
 
 
