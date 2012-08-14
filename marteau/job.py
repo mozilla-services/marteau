@@ -5,6 +5,7 @@ import sys
 import argparse
 import logging
 import tempfile
+import time
 
 
 from marteau import __version__, logger, queue
@@ -26,30 +27,42 @@ LOG_LEVELS = {
 
 LOG_FMT = r"%(asctime)s [%(process)d] [%(levelname)s] %(message)s"
 LOG_DATE_FMT = r"%Y-%m-%d %H:%M:%S"
+CSS_FILE = os.path.join(os.path.dirname(__file__), 'media', 'marteau.css')
+
+
+def _logrun(msg, eol=True):
+    if eol:
+        msg += '\n'
+    sys.stdout.write(msg)
+    #sys.stdout.flush()
+    job_id = queue.pid_to_jobid(os.getpid())
+    if job_id is not None:
+        queue.append_console(job_id, msg)
+    else:
+        sys.stdout.write('Could not push to redis\n')
+        #sys.stdout.flush()
 
 
 def _stream(data):
-    sys.stdout.write(data['data'])
-    # XXX we'll push this in memory somewhere for
-    # the web app to display it live
-    job_id = queue.pid_to_jobid(os.getpid())
-    if job_id is not None:
-        queue.append_console(job_id, data['data'])
+    _logrun(data['data'], eol=False)
 
 
 def run_func(cmd, stop_on_failure=True):
     redirector = Redirector(_stream)
-    redirector.start()
-    logger.debug(cmd)
+    _logrun(cmd)
+
     try:
         process = subprocess.Popen(cmd, shell=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE)
-        redirector.add_redirection('marteau', process, process.stdout)
-        redirector.add_redirection('marteau', process, process.stderr)
+        redirector.add_redirection('marteau-stdout', process, process.stdout)
+        redirector.add_redirection('marteau-stderr', process, process.stderr)
+        redirector.start()
         process.wait()
+
         res = process.returncode
         if res != 0 and stop_on_failure:
+            _logrun("%r failed" % cmd)
             raise Exception("%r failed" % cmd)
         return res
     finally:
@@ -66,7 +79,6 @@ run_pip = run_pip % sys.executable
 
 def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
                  email=None, options=None):
-    configure_logger(logger, 'DEBUG', '-')
 
     if options is None:
         options = {}
@@ -150,18 +162,19 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
     report_dir = os.path.join(reportsdir,
             os.environ.get('MARTEAU_JOBID', 'report'))
 
-    logger.info('Running the loadtest')
+    _logrun('Running the loadtest')
     run_func('%s %s %s' % (cmd, config['script'], config['test']))
 
-    logger.info('Building the report')
-    run_func(run_report + ' --html -r %s  %s' % (report_dir, target))
+    _logrun('Building the report')
+    run_func(run_report + ' --css %s --html -r %s  %s' % (CSS_FILE,
+                                                          report_dir, target))
 
     # do we send an email with the result ?
     if email is None:
         email = config.get('email')
 
     if email is not None:
-        logger.info('Sending an e-mail to %r' % email)
+        _logrun('Sending an e-mail to %r' % email)
         try:
             res, msg = send_report(email, os.environ.get('MARTEAU_JOBID'),
                                    **options)
@@ -170,9 +183,9 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
             msg = str(e)
 
         if not res:
-            logger.debug(msg)
+            _logrun(msg)
         else:
-            logger.debug('Mail sent.')
+            _logrun('Mail sent.')
 
     return report_dir
 
