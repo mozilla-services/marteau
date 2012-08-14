@@ -2,16 +2,14 @@ import random
 import os
 import subprocess
 import sys
-import fcntl
 import argparse
 import logging
 import tempfile
 
 
-from marteau import __version__, logger
+from marteau import __version__, logger, queue
 from marteau.config import read_config
 from marteau.redirector import Redirector
-from marteau import queue, logger
 from marteau.util import send_report, configure_logger
 
 
@@ -66,8 +64,8 @@ run_pip = "%s -c 'from pip import runner; runner.run()'"
 run_pip = run_pip % sys.executable
 
 
-def run_loadtest(repo, cycles=None, nodes_count=None, duration=None, email=None,
-                 options=None):
+def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
+                 email=None, options=None):
     configure_logger(logger, 'DEBUG', '-')
 
     if options is None:
@@ -177,25 +175,6 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None, email=None,
             logger.debug('Mail sent.')
 
     return report_dir
-
-
-def close_on_exec(fd):
-    flags = fcntl.fcntl(fd, fcntl.F_GETFD)
-    flags |= fcntl.FD_CLOEXEC
-    fcntl.fcntl(fd, fcntl.F_SETFD, flags)
-
-
-def configure_logger(logger, level='INFO', output="-"):
-    loglevel = LOG_LEVELS.get(level.lower(), logging.INFO)
-    logger.setLevel(loglevel)
-    if output == "-":
-        h = logging.StreamHandler()
-    else:
-        h = logging.FileHandler(output)
-        close_on_exec(h.stream.fileno())
-    fmt = logging.Formatter(LOG_FMT, LOG_DATE_FMT)
-    h.setFormatter(fmt)
-    logger.addHandler(h)
 
 
 def main():

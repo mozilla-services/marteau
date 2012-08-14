@@ -195,7 +195,6 @@ def add_node():
     return node_name
 
 
-
 @route('/media/<filename:path>')
 def media_dir(filename):
     return static_file(filename, root=MEDIADIR)
@@ -224,4 +223,3 @@ def doc_index():
 
 # loading the app
 app = app()
-

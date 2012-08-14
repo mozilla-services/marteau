@@ -1,7 +1,5 @@
-import fcntl
 import argparse
 import sys
-import logging
 from ConfigParser import ConfigParser
 
 from bottle import run
@@ -9,12 +7,6 @@ from bottle import run
 from marteau import __version__, logger
 from marteau.server import app
 from marteau.util import LOG_LEVELS, configure_logger
-
-
-def close_on_exec(fd):
-    flags = fcntl.fcntl(fd, fcntl.F_GETFD)
-    flags |= fcntl.FD_CLOEXEC
-    fcntl.fcntl(fd, fcntl.F_SETFD, flags)
 
 
 def main():

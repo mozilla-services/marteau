@@ -1,5 +1,5 @@
+import fcntl
 import socket
-import re
 from email.mime.text import MIMEText
 from email.header import Header
 from rfc822 import AddressList
@@ -92,6 +92,11 @@ LOG_LEVELS = {
 LOG_FMT = r"%(asctime)s [%(process)d] [%(levelname)s] %(message)s"
 LOG_DATE_FMT = r"%Y-%m-%d %H:%M:%S"
 
+
+def close_on_exec(fd):
+    flags = fcntl.fcntl(fd, fcntl.F_GETFD)
+    flags |= fcntl.FD_CLOEXEC
+    fcntl.fcntl(fd, fcntl.F_SETFD, flags)
 
 
 def configure_logger(logger, level='INFO', output="-"):
