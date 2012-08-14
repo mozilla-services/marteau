@@ -3,16 +3,9 @@ import fcntl
 import errno
 import os
 import sys
-import time
-from threading import Thread
-import select
 
-from iowait import IOWait
-try:
-    from gevent import select
-    GEVENT = True
-except ImportError:
-    GEVENT = False
+from gevent import select as gselect
+import gevent
 
 
 class NamedPipe(object):
@@ -33,9 +26,9 @@ class NamedPipe(object):
         return self.pipe.read(buffer)
 
 
-class BaseRedirector(object):
+class Redirector(object):
     def __init__(self, redirect, refresh_time=0.3, extra_info=None,
-                 buffer=1024):
+                 buffer=8096):
         self.pipes = []
         self._names = {}
         self.redirect = redirect
@@ -46,16 +39,11 @@ class BaseRedirector(object):
             extra_info = {}
         self.extra_info = extra_info
         self.refresh_time = refresh_time
-        if GEVENT:
-            self.selector = select
-        else:
-            self.selector = IOWait()
+        self.running = False
 
     def add_redirection(self, name, process, pipe):
         npipe = NamedPipe(pipe, process, name)
         self.pipes.append(npipe)
-        if not GEVENT:
-            self.selector.watch(npipe, read=True)
         self._names[process.pid, name] = npipe
 
     def remove_redirection(self, name, process):
@@ -64,61 +52,45 @@ class BaseRedirector(object):
             return
         pipe = self._names[key]
         self.pipes.remove(pipe)
-        if not GEVENT:
-            self.selector.unwatch(pipe)
         del self._names[key]
+
+    def dump(self, pipe, data):
+        datamap = {'data': data, 'pid': pipe.process.pid,
+                   'name': pipe.name}
+        datamap.update(self.extra_info)
+        self.redirect(datamap)
 
     def _select(self):
         if len(self.pipes) == 0:
-            time.sleep(.1)
+            gevent.sleep(.1)
             return
         try:
-            try:
-                if not GEVENT:
-                    rlist = self.selector.wait(timeout=1.0)
-                else:
-                    rlist, __, __ = self.selector(self.pipes, [], [], 1.0)
+            rlist = gselect.select(self.pipes, [], [], timeout=1.0)[0]
 
-            except select.error:     # need a non specific error
-                return
+            while rlist != []:
+                for pipe in rlist:
+                    data = os.read(pipe.fileno(), self.buffer)
+                    if data:
+                        self.dump(pipe, data)
 
-            for elmt in rlist:
-                if not GEVENT:
-                    pipe, __, __ = elmt
-                else:
-                    pipe = elmt
+                rlist = gselect.select(self.pipes, [], [], timeout=1.0)[0]
 
-                data = pipe.read(self.buffer)
-                if data:
-                    datamap = {'data': data, 'pid': pipe.process.pid,
-                               'name': pipe.name}
-                    datamap.update(self.extra_info)
-                    self.redirect(datamap)
         except IOError, ex:
             if ex[0] != errno.EAGAIN:
                 raise
             sys.exc_clear()
 
+        gevent.sleep(self.refresh_time)
 
-class Redirector(BaseRedirector, Thread):
-    def __init__(self, redirect, refresh_time=0.3, extra_info=None,
-            buffer=1024):
-        Thread.__init__(self)
-        BaseRedirector.__init__(self, redirect, refresh_time=refresh_time,
-                extra_info=extra_info, buffer=buffer)
-        self.running = False
+    def start(self):
+        self.running = True
+        gevent.spawn(self.run)
 
     def run(self):
-        self.running = True
         while self.running:
             self._select()
-            time.sleep(self.refresh_time)
 
     def kill(self):
         if not self.running:
             return
         self.running = False
-        try:
-            self.join()
-        except KeyboardInterrupt:
-            pass

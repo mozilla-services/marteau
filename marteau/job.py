@@ -1,12 +1,12 @@
 import random
 import os
-import subprocess
+from StringIO import StringIO
 import sys
 import argparse
 import logging
 import tempfile
-import time
 
+from gevent.subprocess import Popen, PIPE
 
 from marteau import __version__, logger, queue
 from marteau.config import read_config
@@ -30,17 +30,23 @@ LOG_DATE_FMT = r"%Y-%m-%d %H:%M:%S"
 CSS_FILE = os.path.join(os.path.dirname(__file__), 'media', 'marteau.css')
 
 
+class RedisIO(StringIO):
+    def __init__(self, orig):
+        StringIO.__init__(self)
+        self.orig = orig
+
+    def write(self, msg):
+        self.orig.write(msg)
+        job_id = queue.pid_to_jobid(os.getpid())
+        if job_id is not None:
+            queue.append_console(job_id, msg)
+
+
 def _logrun(msg, eol=True):
     if eol:
         msg += '\n'
-    sys.stdout.write(msg)
-    sys.stdout.flush()
-    job_id = queue.pid_to_jobid(os.getpid())
-    if job_id is not None:
-        queue.append_console(job_id, msg)
-    else:
-        sys.stdout.write('Could not push to redis\n')
-        sys.stdout.flush()
+    sys.stderr.write(msg)
+    sys.stderr.flush()
 
 
 def _stream(data):
@@ -49,19 +55,15 @@ def _stream(data):
 
 def run_func(cmd, stop_on_failure=True):
     redirector = Redirector(_stream)
-
     _logrun(cmd)
 
     try:
-        process = subprocess.Popen(cmd, shell=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE)
+        process = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE,
+                        close_fds=True)
         redirector.add_redirection('marteau-stdout', process, process.stdout)
         redirector.add_redirection('marteau-stderr', process, process.stderr)
         redirector.start()
-
         process.wait()
-
         res = process.returncode
         if res != 0 and stop_on_failure:
             _logrun("%r failed" % cmd)
@@ -79,6 +81,21 @@ run_pip = "%s -c 'from pip import runner; runner.run()'"
 run_pip = run_pip % sys.executable
 
 
+def catch_std(func):
+    def _std(*args, **kwargs):
+        old_stdout = sys.stdout
+        old_stderr = sys.stderr
+        sys.stdout = RedisIO(sys.stdout)
+        sys.stderr = RedisIO(sys.stderr)
+        try:
+            return func(*args, **kwargs)
+        finally:
+            sys.stdout = old_stdout
+            sys.stderr = old_stderr
+    return _std
+
+
+@catch_std
 def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
                  email=None, options=None):
 

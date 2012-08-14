@@ -56,7 +56,7 @@ def send_report(rcpt, jobid=None, **options):
     msg['To'] = _normalize_realname(rcpt)
     msg['Subject'] = Header(subject, 'utf-8')
 
-    logger.debug('Connecting to %s:%d'% (smtp_host, smtp_port))
+    logger.debug('Connecting to %s:%d' % (smtp_host, smtp_port))
     try:
         server = smtplib.SMTP(smtp_host, smtp_port, timeout=5)
     except (smtplib.SMTPConnectError, socket.error), e:

@@ -3,9 +3,9 @@ from setuptools import setup, find_packages
 from marteau import __version__
 
 
-install_requires = ['funkload', 'bottle',
+install_requires = ['funkload', 'bottle', 'gevent>=1.0b3',
                     'circus', 'PyYAML', 'paramiko',
-                    'Mako', 'retools', 'iowait',
+                    'Mako', 'retools',
                     'virtualenv', 'Sphinx']
 
 DOCS = os.path.join(os.path.dirname(__file__), 'marteau', 'docs', 'source')
