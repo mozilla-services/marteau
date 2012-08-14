@@ -55,7 +55,7 @@ class BaseRedirector(object):
         npipe = NamedPipe(pipe, process, name)
         self.pipes.append(npipe)
         if not GEVENT:
-            self.select.watch(npipe, read=True)
+            self.selector.watch(npipe, read=True)
         self._names[process.pid, name] = npipe
 
     def remove_redirection(self, name, process):
@@ -65,7 +65,7 @@ class BaseRedirector(object):
         pipe = self._names[key]
         self.pipes.remove(pipe)
         if not GEVENT:
-            self.select.unwatch(pipe)
+            self.selector.unwatch(pipe)
         del self._names[key]
 
     def _select(self):
