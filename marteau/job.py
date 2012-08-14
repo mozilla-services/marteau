@@ -49,7 +49,6 @@ def _stream(data):
 
 def run_func(cmd, stop_on_failure=True):
     redirector = Redirector(_stream)
-    redirector.start()
 
     _logrun(cmd)
 
@@ -59,6 +58,8 @@ def run_func(cmd, stop_on_failure=True):
                 stderr=subprocess.PIPE)
         redirector.add_redirection('marteau-stdout', process, process.stdout)
         redirector.add_redirection('marteau-stderr', process, process.stderr)
+        redirector.start()
+
         process.wait()
 
         res = process.returncode
