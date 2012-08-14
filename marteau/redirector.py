@@ -5,8 +5,14 @@ import os
 import sys
 import time
 from threading import Thread
+import select
 
 from iowait import IOWait
+try:
+    from gevent import select
+    GEVENT = True
+except ImportError:
+    GEVENT = False
 
 
 class NamedPipe(object):
@@ -40,12 +46,16 @@ class BaseRedirector(object):
             extra_info = {}
         self.extra_info = extra_info
         self.refresh_time = refresh_time
-        self.select = IOWait()
+        if GEVENT:
+            self.selector = select
+        else:
+            self.selector = IOWait()
 
     def add_redirection(self, name, process, pipe):
         npipe = NamedPipe(pipe, process, name)
         self.pipes.append(npipe)
-        self.select.watch(npipe, read=True)
+        if not GEVENT:
+            self.select.watch(npipe, read=True)
         self._names[process.pid, name] = npipe
 
     def remove_redirection(self, name, process):
@@ -54,7 +64,8 @@ class BaseRedirector(object):
             return
         pipe = self._names[key]
         self.pipes.remove(pipe)
-        self.select.unwatch(pipe)
+        if not GEVENT:
+            self.select.unwatch(pipe)
         del self._names[key]
 
     def _select(self):
@@ -63,11 +74,20 @@ class BaseRedirector(object):
             return
         try:
             try:
-                rlist = self.select.wait(timeout=1.0)
+                if not GEVENT:
+                    rlist = self.selector.wait(timeout=1.0)
+                else:
+                    rlist, __, __ = self.selector(self.pipes, [], [], 1.0)
+
             except select.error:     # need a non specific error
                 return
 
-            for pipe, __, __ in rlist:
+            for elmt in rlist:
+                if not GEVENT:
+                    pipe, __, __ = elmt
+                else:
+                    pipe = elmt
+
                 data = pipe.read(self.buffer)
                 if data:
                     datamap = {'data': data, 'pid': pipe.process.pid,
