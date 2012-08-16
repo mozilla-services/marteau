@@ -209,7 +209,8 @@ def add_node():
 
 @route('/favicon.ico')
 def favicon():
-    return static_file('favicon.ico',  root=MEDIADIR)
+    return static_file('favicon.ico',  root=MEDIADIR,
+                       mimetype='image/x-icon')
 
 
 @route('/media/<filename:path>')
