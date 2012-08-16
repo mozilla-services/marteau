@@ -214,7 +214,11 @@ def favicon():
 
 @route('/media/<filename:path>')
 def media_dir(filename):
-    return static_file(filename, root=MEDIADIR)
+    if filename == 'marteau.kar':
+        kw = {'mimetype': 'audio/midi'}
+    else:
+        kw = {}
+    return static_file(filename, root=MEDIADIR, **kw)
 
 
 @route('/report/<jobid>/<filename:path>')
