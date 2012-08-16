@@ -17,6 +17,30 @@ a:hover {
  text-decoration: underline;
 }
 
+h1.title {
+  background-image: url("/media/head.png");
+  height: 80px;
+  color: white;
+  border: none;
+  padding-left: 20px;
+  padding-top: 2px;
+  margin: 0px;
+}
+
+h1.title a {
+  color: white; 
+}
+
+div.section, div.abstract, div.contents {
+  padding-right: 20px;
+  padding-left: 20px;
+  color: black;
+}
+
+a.toc-backref {
+  color: black;
+}
+
 
 #header {
   background-image: url("/media/head.png");
