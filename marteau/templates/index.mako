@@ -93,8 +93,7 @@ I am bored !
 %endif
 </div>
 
-<div style="clear:both"></div>
-
+<div id="failures">
 <h2>Failures</h2>
 
 <table>
@@ -109,7 +108,9 @@ I am bored !
 %if not failures:
 None, congrats! &mdash; although that's suspicious.
 %endif
+</div>
 
+<div id="successes">
 <h2>Successes</h2>
 %if successes:
 <table>
@@ -126,5 +127,5 @@ None, congrats! &mdash; although that's suspicious.
 %if not successes:
 None, this worries me.
 %endif
-
+</div>
 

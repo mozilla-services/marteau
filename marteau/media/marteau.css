@@ -109,7 +109,7 @@ div.resource div {
 }
 
 
-#pending {
+#pending, #failures, #successes {
  float: left;
  min-width: 300px;
 }
