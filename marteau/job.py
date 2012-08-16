@@ -185,8 +185,9 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
     run_func('%s %s %s' % (cmd, config['script'], config['test']))
 
     _logrun('Building the report')
-    run_func(run_report + ' --css %s --html -r %s  %s' % (CSS_FILE,
-                                                          report_dir, target))
+
+    report = run_report + ' --skip-definitions --css %s --html -r %s  %s'
+    run_func(report % (CSS_FILE, report_dir, target))
 
     # do we send an email with the result ?
     if email is None:
