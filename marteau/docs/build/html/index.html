@@ -70,11 +70,12 @@ load tests through the web.</p>
 </div>
 <div class="section" id="how-to-create-a-marteau-load-test">
 <h1>How to create a Marteau Load Test<a class="headerlink" href="#how-to-create-a-marteau-load-test" title="Permalink to this headline">¶</a></h1>
-<p>Creating a load test for marteau is done in two steps:</p>
+<p>Creating a load test for marteau is done in three steps:</p>
 <ul class="simple">
 <li>create a Funkload load test - composed of a module and a configuration file</li>
 <li>create a <strong>.marteau.yml</strong> file, that will be used by Marteau as the
 entry point.</li>
+<li>push everything in a Github repository.</li>
 </ul>
 <div class="section" id="create-a-funkload-test">
 <h2>Create a Funkload test<a class="headerlink" href="#create-a-funkload-test" title="Permalink to this headline">¶</a></h2>
@@ -82,11 +83,54 @@ entry point.</li>
 </div>
 <div class="section" id="create-a-marteau-configuration-file">
 <h2>Create a Marteau configuration file<a class="headerlink" href="#create-a-marteau-configuration-file" title="Permalink to this headline">¶</a></h2>
-<p>XXX</p>
+<p>The Marteau configuration file must be named <strong>.marteau.yml</strong> and must be
+located in the root of your repository.</p>
+<p><strong>.marteau.yml</strong> is a YAML file with the following options. Every option is
+optional except <strong>script</strong>, <strong>test</strong> and <strong>name</strong>.</p>
+<ul class="simple">
+<li><strong>name</strong> &#8211; a name describing the load test.</li>
+<li><strong>script</strong> &#8211; the Python module that contains the Funkload test</li>
+<li><strong>test</strong> &#8211; The test to run, which is a class name followed by a method name.
+e.g. <em>Class.method</em></li>
+<li><strong>wdir</strong> &#8211; the directory relative to the repository root that contains the
+Funkload test &#8211; <em>defaults to root</em></li>
+<li><strong>nodes</strong> &#8211; the number of nodes to use to run the test &#8211; <em>defaults to 1</em></li>
+<li><strong>deps</strong> &#8211; a list of PyPI dependencies required by the test. Will be installed
+on every node prior to starting the load.</li>
+<li><strong>cycles</strong> &#8211; the Funkload cycles. See <a class="reference external" href="http://funkload.nuxeo.org/benching.html#cycle">definition</a>.
+If not provided, will use the one in the Funkload configurarion file.</li>
+<li><strong>duration</strong> &#8211; the duration in seconds of each test.
+If not provided, will use the one in the Funkload configurarion file.</li>
+<li><strong>email</strong> &#8211; if provided, a recipient that will receive an e-mail when a load
+test run is finished, with a link to the HTML report.</li>
+</ul>
+<p>Example of a configuration file</p>
+<div class="highlight-python"><pre>name: MarketPlace
+test: MarketplaceTest.test_marketplace
+script: loadtest.py
+nodes: 9
+email: tarek@ziade.org
+cycles: 10:20:30:100
+duration:120
+deps:
+    - PyBrowserID</pre>
+</div>
 </div>
 <div class="section" id="try-it-locally">
 <h2>Try it locally<a class="headerlink" href="#try-it-locally" title="Permalink to this headline">¶</a></h2>
-<p>XXX</p>
+<p>Once you have a Funkload test and a Marteau configuration file, you can try to run
+it locally by using the <strong>marteau</strong> script against the github repo URL or against
+a directory containing a clone of the repo:</p>
+<div class="highlight-python"><pre>$ marteau /Users/tarek/Dev/github.com/tokenserver
+2012-08-16 13:27:25 [31624] [INFO] Hammer ready. Where are the nails ?
+virtualenv --no-site-packages .
+...
+2012-08-16 13:46:20 [37308] [INFO] Report generated at '/tmp/report'
+2012-08-16 13:46:20 [37308] [INFO] Bye!</pre>
+</div>
+<p>In this mode, Marteau will ignore the <strong>node</strong> option and just execute the load
+test locally. Once it&#8217;s over you get the report generated, and you can view
+it in your browser.</p>
 </div>
 <div class="section" id="run-it-on-a-marteau-server">
 <h2>Run it on a Marteau server<a class="headerlink" href="#run-it-on-a-marteau-server" title="Permalink to this headline">¶</a></h2>
