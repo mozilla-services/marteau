@@ -108,21 +108,15 @@ div.resource div {
   margin-top: 6px;
 }
 
-
-#pending, #failures, #successes {
- float: left;
- min-width: 300px;
+#running, #pending, #failures, #successes {
+  float: left;
+  min-width: 400px;
+  padding: 10px;
 }
 
 #workers {
  margin-bottom: 10px;
  margin-top: 10px;
-}
-
-#running {
- float: left;
- min-width: 300px;
- margin-left: 15px;
 }
 
 div.resource a {
