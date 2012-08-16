@@ -219,7 +219,7 @@ def get_job(job_id):
         job = _QM.redis.get('retools:job:%s' % job_id)
         if job is None:
             raise
-    return Job(_QM.default_queue_name, job, _QM.redis)
+        return Job(_QM.default_queue_name, job, _QM.redis)
 
 
 def get_jobs():
