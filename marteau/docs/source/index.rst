@@ -25,11 +25,12 @@ load tests through the web.
 How to create a Marteau Load Test
 =================================
 
-Creating a load test for marteau is done in two steps:
+Creating a load test for marteau is done in three steps:
 
 - create a Funkload load test - composed of a module and a configuration file
 - create a **.marteau.yml** file, that will be used by Marteau as the
   entry point.
+- push everything in a Github repository.
 
 
 Create a Funkload test
@@ -41,12 +42,61 @@ Just follow Funkload `tutorial <http://funkload.nuxeo.org/tutorial.html>`_
 Create a Marteau configuration file
 -----------------------------------
 
-XXX
+The Marteau configuration file must be named **.marteau.yml** and must be
+located in the root of your repository.
+
+**.marteau.yml** is a YAML file with the following options. Every option is
+optional except **script**, **test** and **name**.
+
+- **name** -- a name describing the load test.
+- **script** -- the Python module that contains the Funkload test
+- **test** -- The test to run, which is a class name followed by a method name.
+  e.g. *Class.method*
+- **wdir** -- the directory relative to the repository root that contains the
+  Funkload test -- *defaults to root*
+- **nodes** -- the number of nodes to use to run the test -- *defaults to 1*
+- **deps** -- a list of PyPI dependencies required by the test. Will be installed
+  on every node prior to starting the load.
+- **cycles** -- the Funkload cycles. See `definition <http://funkload.nuxeo.org/benching.html#cycle>`_.
+  If not provided, will use the one in the Funkload configurarion file.
+- **duration** -- the duration in seconds of each test.
+  If not provided, will use the one in the Funkload configurarion file.
+- **email** -- if provided, a recipient that will receive an e-mail when a load
+  test run is finished, with a link to the HTML report.
+
+Example of a configuration file  ::
+
+    name: MarketPlace
+    test: MarketplaceTest.test_marketplace
+    script: loadtest.py
+    nodes: 9
+    email: tarek@ziade.org
+    cycles: 10:20:30:100
+    duration:120
+    deps:
+        - PyBrowserID
+
 
 Try it locally
 --------------
 
-XXX
+Once you have a Funkload test and a Marteau configuration file, you can try to run
+it locally by using the **marteau** script against the github repo URL or against
+a directory containing a clone of the repo::
+
+    $ marteau /Users/tarek/Dev/github.com/tokenserver
+    2012-08-16 13:27:25 [31624] [INFO] Hammer ready. Where are the nails ?
+    virtualenv --no-site-packages .
+    ...
+    2012-08-16 13:46:20 [37308] [INFO] Report generated at '/tmp/report'
+    2012-08-16 13:46:20 [37308] [INFO] Bye!
+
+
+In this mode, Marteau will ignore the **node** option and just execute the load
+test locally. Once it's over you get the report generated, and you can view
+it in your browser.
+
+
 
 Run it on a Marteau server
 --------------------------

@@ -97,7 +97,7 @@ def catch_std(func):
 
 @catch_std
 def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
-                 email=None, options=None):
+                 email=None, options=None, distributed=True):
 
     if options is None:
         options = {}
@@ -105,6 +105,7 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
     if os.path.exists(repo):
         # just a local dir, lets work there
         os.chdir(repo)
+        target = os.path.realpath(repo)
     else:
         # checking out the repo
         os.chdir(workdir)
@@ -122,7 +123,8 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
 
     wdir = config.get('wdir')
     if wdir is not None:
-        os.chdir(wdir)
+        target = os.path.join(target, wdir)
+        os.chdir(target)
 
     # creating a virtualenv there
     run_func('virtualenv --no-site-packages .')
@@ -133,38 +135,41 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
     for dep in deps:
         run_func(run_pip + ' install %s' % dep)
 
-    # is this a distributed test ?
-    if nodes_count is None:
-        nodes_count = config.get('nodes', 1)
+    if distributed:
+        # is this a distributed test ?
+        if nodes_count is None:
+            nodes_count = config.get('nodes', 1)
 
-    # we want to pick up the number of nodes asked
-    nodes = [node for node in queue.get_nodes()
-                if node.status == 'idle']
+        # we want to pick up the number of nodes asked
+        nodes = [node for node in queue.get_nodes()
+                    if node.status == 'idle']
 
-    if len(nodes) < nodes_count:
-        # XXX we want to pile this one back !
-        raise ValueError("Sorry could not find enough free nodes")
+        if len(nodes) < nodes_count:
+            # XXX we want to pile this one back !
+            raise ValueError("Sorry could not find enough free nodes")
 
-    # then pick random ones
-    random.shuffle(nodes)
-    nodes = nodes[:nodes_count]
+        # then pick random ones
+        random.shuffle(nodes)
+        nodes = nodes[:nodes_count]
 
-    # save the nodes status
-    for node in nodes:
-        node.status = 'working'
-        queue.save_node(node)
+        # save the nodes status
+        for node in nodes:
+            node.status = 'working'
+            queue.save_node(node)
 
-    workers = ','.join([node.name for node in nodes])
-    os.environ['MARTEAU_NODES'] = workers
+        workers = ','.join([node.name for node in nodes])
+        os.environ['MARTEAU_NODES'] = workers
 
-    workers = '--distribute-workers=%s' % workers
-    cmd = '%s --distribute %s' % (run_bench, workers)
-    if deps != []:
-        cmd += ' --distributed-packages=%s' % ' '.join(deps)
+        workers = '--distribute-workers=%s' % workers
+        cmd = '%s --distribute %s' % (run_bench, workers)
+        if deps != []:
+            cmd += ' --distributed-packages=%s' % ' '.join(deps)
+        target = tempfile.mkdtemp()
+        cmd += ' --distributed-log-path=%s' % target
+    else:
+        cmd = run_bench
 
-    target = tempfile.mkdtemp()
-    cmd += ' --distributed-log-path=%s' % target
-    target = os.path.join(target, '*.xml')
+    xml_files = os.path.join(target, '*.xml')
 
     if cycles is None:
         cycles = config.get('cycles')
@@ -187,7 +192,7 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
     _logrun('Building the report')
 
     report = run_report + ' --skip-definitions --css %s --html -r %s  %s'
-    run_func(report % (CSS_FILE, report_dir, target))
+    run_func(report % (CSS_FILE, report_dir, xml_files))
 
     # do we send an email with the result ?
     if email is None:
@@ -222,6 +227,9 @@ def main():
             help="log level")
     parser.add_argument('--log-output', dest='logoutput', default='-',
             help="log output")
+    parser.add_argument('--distributed', action='store_true',
+                        default=False,
+                        help='Run with the nodes')
 
     args = parser.parse_args()
 
@@ -238,7 +246,8 @@ def main():
 
     logger.info('Hammer ready. Where are the nails ?')
     try:
-        return run_loadtest(args.repo)
+        res = run_loadtest(args.repo, distributed=args.distributed)
+        logger.info('Report generated at %r' % res)
     except KeyboardInterrupt:
         sys.exit(0)
     finally:
