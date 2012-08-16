@@ -190,4 +190,5 @@ def get_running_jobs():
 
 
 def get_workers():
-    return list(Worker.get_workers(redis=_QM.redis))
+    ids = list(Worker.get_worker_ids(redis=_QM.redis))
+    return [wid.split(':')[1] for wid in ids]

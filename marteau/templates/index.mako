@@ -10,7 +10,7 @@
 <div id="workers" class="resource">
 <span>Workers</span>
 %for worker in workers:
-<div>${worker.worker_id} - Queues: ${", ".join(worker.queues)}</div>
+<div>PID : ${worker}</div>
 %endfor
 %if not workers:
 <div>
