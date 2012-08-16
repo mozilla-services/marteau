@@ -97,10 +97,19 @@ test locally. Once it's over you get the report generated, and you can view
 it in your browser.
 
 
-
 Run it on a Marteau server
 --------------------------
 
-XXX
+Once you are happy with your test, you can send it to a Marteau server via
+the command line, using the **--server** option.
 
+Let's say Marteau is running on **http://marteau.example.com**. You'd do::
 
+    $ bin/marteau https://github.com/mozilla-services/tokenserver --server http://marteau.example.com
+    2012-08-16 14:21:22 [48118] [INFO] Sending the job to the Marteau server
+    2012-08-16 14:21:22 [48118] [INFO] Test added at 'http://marteau.example.com/test/a3296777b6eb4d74a879d05bbd40c204'
+    2012-08-16 14:21:22 [48118] [INFO] Bye!
+
+You can then visit the URL and watch the console live.
+
+Alternatively, you can visit the Marteau server and just fill the form.
