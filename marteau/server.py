@@ -103,6 +103,18 @@ def add_run():
     return job_id
 
 
+@route('/test/<jobid>/delete', method='GET')
+def _delete_job(jobid):
+    queue.delete_job(jobid)
+    redirect('/')
+
+
+@route('/test/<jobid>/replay', method='GET')
+def _requeue_job(jobid):
+    queue.replay(jobid)
+    redirect('/')
+
+
 @route('/test/<jobid>', method='GET')
 def _get_result(jobid):
     """Gets results from a run"""
@@ -193,6 +205,11 @@ def add_node():
         return redirect('/nodes')
 
     return node_name
+
+
+@route('/favicon.ico')
+def favicon():
+    return static_file('favicon.ico',  root=MEDIADIR)
 
 
 @route('/media/<filename:path>')

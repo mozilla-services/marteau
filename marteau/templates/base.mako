@@ -4,13 +4,15 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
   <link href='/media/marteau.css' rel='stylesheet' type='text/css'/>
-
-  </head>
+  <link rel="shortcut icon" href="/favicon.ico">
+  <title>Marteau</title> 
+</head>
   <body>
     <div id="header">   
+        <img src="/media/logo.png"/>
         <a href="/" id="title">Marteau</a>
         <span id="subtitle">Hammering your web services since 2012</span>
-        <a href="/media/marteau.kar">don't</q>
+        <a href="/media/marteau.kar">don't</a>
      </div>
    <div id="body">
         ${self.body()}

@@ -68,12 +68,13 @@ def get_result(job_id):
 
 
 def get_failures():
-    failures = list(_QM.get_jobs('failures'))
-    return failures
+    return [get_job(job_id)
+            for job_id in _QM.redis.smembers('retools:queue:failures')]
 
 
 def get_successes():
-    return list(_QM.get_jobs('successes'))
+    return [get_job(job_id)
+            for job_id in _QM.redis.smembers('retools:queue:successes')]
 
 
 def starting(job=None):
@@ -89,9 +90,9 @@ def success(job=None, result=None):
     job.metadata['ended'] = time.time()
     result = json.dumps({'data': result})
     pl.srem('retools:started', job.job_id)
-    pl.delete('retools:job:%s' % job.job_id)
+    #pl.delete('retools:job:%s' % job.job_id)
     pl.delete('retools:jobpid:%s' % str(os.getpid()))
-    pl.lpush('retools:queue:successes', job.to_json())
+    pl.sadd('retools:queue:successes', job.job_id)
     pl.lpush('retools:result:%s' % job.job_id, result)
     pl.expire('retools:result:%s', 3600)
     pl.sadd('retools:consoles', job.job_id)
@@ -114,9 +115,9 @@ def failure(job=None, exc=None):
     job.metadata['ended'] = time.time()
     exc = json.dumps({'data': str(exc)})
     pl.srem('retools:started', job.job_id)
-    pl.delete('retools:job:%s' % job.job_id)
+    #pl.delete('retools:job:%s' % job.job_id)
     pl.delete('retools:jobpid:%s' % str(os.getpid()))
-    pl.lpush('retools:queue:failures', job.to_json())
+    pl.sadd('retools:queue:failures', job.job_id)
     pl.lpush('retools:result:%s' % job.job_id, exc)
     pl.sadd('retools:consoles', job.job_id)
     pl.expire('retools:result:%s', 3600)
@@ -128,6 +129,16 @@ def failure(job=None, exc=None):
             node.status = 'idle'
             save_node(node)
     pl.execute()
+
+
+def delete_job(job_id):
+    _QM.redis.delete('retools:job:%s' % job_id)
+    _QM.redis.delete('retools:jobpid:%s' % job_id)
+    _QM.redis.delete('retools:jobconsole:%s' % job_id)
+    if _QM.redis.sismember('retools:consoles', job_id):
+        _QM.redis.srem('retools:consoles', job_id)
+    _QM.redis.srem('retools:queue:failures', job_id)
+    _QM.redis.srem('retools:queue:successes', job_id)
 
 
 def purge():
@@ -166,8 +177,39 @@ def initialize():
 initialize()
 
 
+def replay(job_id):
+    job = get_job(job_id)
+    data = job.to_dict()
+    job_name = data['job']
+    kwargs = data['kwargs']
+
+    metadata = {'created': time.time(),
+                'repo': data['metadata']['repo']}
+
+    kwargs['metadata'] = metadata
+    enqueue(job_name, **kwargs)
+
+
+
 def enqueue(funcname, **kwargs):
     return _QM.enqueue(funcname, **kwargs)
+
+
+def _get_job(job_id, queue_names, redis):
+    for queue_name in queue_names:
+        current_len = redis.llen(queue_name)
+
+        # that's O(n), we should do better
+        for i in range(current_len):
+            # the list can change while doing this
+            # so we need to catch any index error
+            job = redis.lindex(queue_name, i)
+            job_data = json.loads(job)
+
+            if job_data['job_id'] == job_id:
+                return Job(queue_name, job, redis)
+
+    raise IndexError(job_id)
 
 
 def get_job(job_id):
@@ -177,7 +219,7 @@ def get_job(job_id):
         job = _QM.redis.get('retools:job:%s' % job_id)
         if job is None:
             raise
-        return Job(_QM.default_queue_name, job, _QM.redis)
+    return Job(_QM.default_queue_name, job, _QM.redis)
 
 
 def get_jobs():

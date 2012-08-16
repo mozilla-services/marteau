@@ -74,6 +74,8 @@ C'mon, I need some boxes.
 %for job in jobs:
 <div>
 <a href="/test/${job.job_id}">${job.metadata.get('repo', job.job_id)}</a> created at ${time2str(job.metadata.get('created'))}
+<a href="/test/${job.job_id}/cancel">[Cancel]</a>
+
 </div>
 %endfor
 %if not jobs:
@@ -86,6 +88,7 @@ Nothing in my pile.
 %for job in running:
 <div>
     <a href="/test/${job.job_id}">${job.metadata.get('repo', job.job_id)}</a> started at ${time2str(job.metadata.get('started'))}
+    <a href="/test/${job.job_id}/cancel">[Cancel]</a>
 </div>
 %endfor
 %if not running:
@@ -101,6 +104,8 @@ I am bored !
 <tr>
   <td>${job.metadata.get('repo', job.job_id)} ended at ${time2str(job.metadata.get('ended'))}</td>
   <td><a href="/test/${job.job_id}">[Console]</a></td>
+  <td><a href="/test/${job.job_id}/delete">[Delete]</a></td>
+  <td><a href="/test/${job.job_id}/replay">[Replay]</a></td>
 </tr>
 %endfor
 </table>
@@ -119,6 +124,8 @@ None, congrats! &mdash; although that's suspicious.
   <td>${job.metadata.get('repo', job.job_id)} ended at ${time2str(job.metadata.get('created'))}</td>
   <td><a href="/test/${job.job_id}">[Console]</a></td>
   <td><a href="/report/${job.job_id}/index.html">[Funkload Report]</a></td>
+  <td><a href="/test/${job.job_id}/delete">[Delete]</a></td>
+  <td><a href="/test/${job.job_id}/replay">[Replay]</a></td>
 </tr>
 %endfor
 </table>
