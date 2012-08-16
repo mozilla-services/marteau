@@ -10,6 +10,7 @@
     <div id="header">   
         <a href="/" id="title">Marteau</a>
         <span id="subtitle">Hammering your web services since 2012</span>
+        <a href="/media/marteau.kar">don't</q>
      </div>
    <div id="body">
         ${self.body()}
