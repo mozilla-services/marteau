@@ -65,17 +65,17 @@ def add_run():
     redirect_url = request.forms.get('redirect_url')
 
     cycles = request.forms.get('cycles')
-    if cycles == '':
+    if cycles in ('', None):
         cycles = None
 
     duration = request.forms.get('duration')
-    if duration != '':
+    if duration not in ('', None):
         duration = int(duration)
     else:
         duration = None
 
     nodes = request.forms.get('nodes')
-    if nodes != '':
+    if nodes not in ('', None):
         nodes = int(nodes)
     else:
         nodes = None

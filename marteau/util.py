@@ -1,3 +1,5 @@
+import urllib
+import urllib2
 import fcntl
 import socket
 from email.mime.text import MIMEText
@@ -110,3 +112,10 @@ def configure_logger(logger, level='INFO', output="-"):
     fmt = logging.Formatter(LOG_FMT, LOG_DATE_FMT)
     h.setFormatter(fmt)
     logger.addHandler(h)
+
+
+def send_form(url, params):
+    params = urllib.urlencode(params)
+    request = urllib2.Request(url, params)
+    res = urllib2.urlopen(request).read()
+    return res

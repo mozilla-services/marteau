@@ -11,7 +11,7 @@ from gevent.subprocess import Popen, PIPE
 from marteau import __version__, logger, queue
 from marteau.config import read_config
 from marteau.redirector import Redirector
-from marteau.util import send_report, configure_logger
+from marteau.util import send_report, configure_logger, send_form
 
 
 workdir = '/tmp'
@@ -215,6 +215,13 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
     return report_dir
 
 
+def send_job(repo, server):
+    url = server.rstrip('/') + '/test'
+    data = {'repo': repo}
+    res = send_form(url, data)
+    return server.rstrip('/') + '/test/' + res
+
+
 def main():
     parser = argparse.ArgumentParser(description='Drives Funkload.')
     parser.add_argument('repo', help='Git repository or local directory',
@@ -230,6 +237,8 @@ def main():
     parser.add_argument('--distributed', action='store_true',
                         default=False,
                         help='Run with the nodes')
+    parser.add_argument('--server', dest='server',
+            default=None, help="Marteau Server to send the job to")
 
     args = parser.parse_args()
 
@@ -244,14 +253,25 @@ def main():
     # configure the logger
     configure_logger(logger, args.loglevel, args.logoutput)
 
-    logger.info('Hammer ready. Where are the nails ?')
-    try:
-        res = run_loadtest(args.repo, distributed=args.distributed)
-        logger.info('Report generated at %r' % res)
-    except KeyboardInterrupt:
+    if args.server and os.path.exists(args.repo):
+        logging.error("You can't run on a server and provide a local dir!")
         sys.exit(0)
-    finally:
+
+    if args.server:
+        logger.info('Sending the job to the Marteau server')
+        test = send_job(args.repo, args.server)
+        logger.info('Test added at %r' % test)
         logger.info('Bye!')
+        sys.exit(1)
+    else:
+        logger.info('Hammer ready. Where are the nails ?')
+        try:
+            res = run_loadtest(args.repo, distributed=args.distributed)
+            logger.info('Report generated at %r' % res)
+        except KeyboardInterrupt:
+            sys.exit(0)
+        finally:
+            logger.info('Bye!')
 
 
 if __name__ == '__main__':
