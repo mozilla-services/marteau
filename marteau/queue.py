@@ -39,7 +39,7 @@ def delete_node(name):
 
 def get_nodes():
     names = _QM.redis.smembers('retools:nodes')
-    for name in names:
+    for name in sorted(names):
         node = _QM.redis.get('retools:node:%s' % name)
         yield Node(**json.loads(node))
 
