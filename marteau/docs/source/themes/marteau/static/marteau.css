@@ -23,6 +23,18 @@ body {
   background-color: #eeeeec;
 }
 
+pre {
+    font-family: 'Consolas','Deja Vu Sans Mono','Bitstream Vera Sans Mono',monospace;
+    margin: 1em 2em;
+    font-size: 0.95em;
+    letter-spacing: 0.015em;
+    line-height: 120%;
+    padding: 0.5em;
+    border: 1px solid rgb(204, 204, 204);
+    background-color: rgb(238, 238, 238);
+    border-radius: 6px 6px 6px 6px;
+}
+
 
 /* Page layout */
 
