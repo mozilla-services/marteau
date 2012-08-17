@@ -5,6 +5,7 @@ import sys
 import argparse
 import logging
 import tempfile
+import signal
 
 from gevent.subprocess import Popen, PIPE
 
@@ -53,7 +54,7 @@ def _stream(data):
     _logrun(data['data'], eol=False)
 
 
-def run_func(cmd, stop_on_failure=True):
+def run_func(job_id, cmd, stop_on_failure=True):
     redirector = Redirector(_stream)
     _logrun(cmd)
 
@@ -63,6 +64,8 @@ def run_func(cmd, stop_on_failure=True):
         redirector.add_redirection('marteau-stdout', process, process.stdout)
         redirector.add_redirection('marteau-stderr', process, process.stderr)
         redirector.start()
+        pid = process.pid
+        queue.add_pid(job_id, pid)
         process.wait()
         res = process.returncode
         if res != 0 and stop_on_failure:
@@ -71,6 +74,14 @@ def run_func(cmd, stop_on_failure=True):
         return res
     finally:
         redirector.kill()
+        queue.remove_pid(job_id, pid)
+
+
+def cleanup_job(job_id):
+    for pid in queue.get_pids(job_id):
+        os.kill(pid, signal.SIGTERM)
+
+    queue.delete_pids(job_id)
 
 
 run_bench = "%s -c 'from funkload.BenchRunner import main; main()'"
@@ -95,9 +106,23 @@ def catch_std(func):
     return _std
 
 
+def cleanup(func):
+    def _cleanup(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        finally:
+            job_id = os.environ.get('MARTEAU_JOBID')
+            if job_id is not None:
+                queue.delete_pids(job_id)
+    return _cleanup
+
+
 @catch_std
+@cleanup
 def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
                  email=None, options=None, distributed=True):
+
+    job_id = os.environ.get('MARTEAU_JOBID', '')
 
     if options is None:
         options = {}
@@ -113,9 +138,9 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
         target = os.path.join(workdir, name)
         if os.path.exists(target):
             os.chdir(target)
-            run_func('git pull')
+            run_func(job_id, 'git pull')
         else:
-            run_func('git clone %s' % repo, stop_on_failure=False)
+            run_func(job_id, 'git clone %s' % repo, stop_on_failure=False)
             os.chdir(target)
 
     # now looking for the marteau config file in there
@@ -127,13 +152,13 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
         os.chdir(target)
 
     # creating a virtualenv there
-    run_func('virtualenv --no-site-packages .')
-    run_func(run_pip + ' install funkload')
+    run_func(job_id, 'virtualenv --no-site-packages .')
+    run_func(job_id, run_pip + ' install funkload')
 
     # install dependencies if any
     deps = config.get('deps', [])
     for dep in deps:
-        run_func(run_pip + ' install %s' % dep)
+        run_func(job_id, run_pip + ' install %s' % dep)
 
     if distributed:
         # is this a distributed test ?
@@ -187,12 +212,12 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
             os.environ.get('MARTEAU_JOBID', 'report'))
 
     _logrun('Running the loadtest')
-    run_func('%s %s %s' % (cmd, config['script'], config['test']))
+    run_func(job_id, '%s %s %s' % (cmd, config['script'], config['test']))
 
     _logrun('Building the report')
 
     report = run_report + ' --skip-definitions --css %s --html -r %s  %s'
-    run_func(report % (CSS_FILE, report_dir, xml_files))
+    run_func(job_id, report % (CSS_FILE, report_dir, xml_files))
 
     # do we send an email with the result ?
     if email is None:
@@ -201,8 +226,7 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
     if email is not None:
         _logrun('Sending an e-mail to %r' % email)
         try:
-            res, msg = send_report(email, os.environ.get('MARTEAU_JOBID'),
-                                   **options)
+            res, msg = send_report(email, job_id, **options)
         except Exception, e:
             res = False
             msg = str(e)

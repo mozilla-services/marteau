@@ -10,7 +10,7 @@ from mako.lookup import TemplateLookup
 import paramiko
 
 from marteau import queue
-from marteau.job import reportsdir
+from marteau.job import reportsdir, cleanup_job
 from marteau.node import Node
 
 
@@ -101,6 +101,13 @@ def add_run():
         return redirect(redirect_url)
 
     return job_id
+
+
+@route('/test/<jobid>/cancel', method='GET')
+def _cancel_job(jobid):
+    queue.cancel_job(jobid)
+    cleanup_job(jobid)
+    redirect('/')
 
 
 @route('/test/<jobid>/delete', method='GET')

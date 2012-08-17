@@ -1,3 +1,4 @@
+import signal
 import time
 import os
 import json
@@ -42,6 +43,7 @@ def get_nodes():
     for name in sorted(names):
         node = _QM.redis.get('retools:node:%s' % name)
         yield Node(**json.loads(node))
+
 
 def save_job(job):
     job.redis.set('retools:job:%s' % job.job_id, job.to_json())
@@ -137,6 +139,7 @@ def failure(job=None, exc=None):
 
 
 def delete_job(job_id):
+    _QM.redis.delete('retools:started', job_id)
     _QM.redis.delete('retools:job:%s' % job_id)
     _QM.redis.delete('retools:jobpid:%s' % job_id)
     _QM.redis.delete('retools:jobconsole:%s' % job_id)
@@ -183,6 +186,31 @@ def initialize():
 initialize()
 
 
+def cancel_job(job_id):
+    redis = _QM.redis
+
+    # first, find out which worker is working on this
+    for worker_id in redis.smembers('retools:workers'):
+        status_key = "retools:worker:%s" % worker_id
+        status = redis.get(status_key)
+
+        if status is None:
+            continue
+        status = json.loads(status)
+        job_payload = status['payload']
+        if job_payload['job_id'] != job_id:
+            continue
+
+        # that's the worker !
+        # get its pid and ask it to stop
+        pid = int(worker_id.split(':')[1])
+        os.kill(pid, signal.SIGUSR1)
+
+        break
+
+    # XXX we make the assumption all went well...
+
+
 def replay(job_id):
     job = get_job(job_id)
     data = job.to_dict()
@@ -194,7 +222,6 @@ def replay(job_id):
 
     kwargs['metadata'] = metadata
     enqueue(job_name, **kwargs)
-
 
 
 def enqueue(funcname, **kwargs):
@@ -240,3 +267,19 @@ def get_running_jobs():
 def get_workers():
     ids = list(Worker.get_worker_ids(redis=_QM.redis))
     return [wid.split(':')[1] for wid in ids]
+
+
+def delete_pids(job_id):
+    _QM.redis.delete('retools:%s:pids' % job_id)
+
+
+def add_pid(job_id, pid):
+    _QM.redis.sadd('retools:%s:pids' % job_id, str(pid))
+
+
+def remove_pid(job_id, pid):
+    _QM.redis.srem('retools:%s:pids' % job_id, str(pid))
+
+
+def get_pids(job_id):
+    return [int(pid) for pid in _QM.redis.smembers('retools:%s:pids' % job_id)]
