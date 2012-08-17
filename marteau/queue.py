@@ -43,6 +43,9 @@ def get_nodes():
         node = _QM.redis.get('retools:node:%s' % name)
         yield Node(**json.loads(node))
 
+def save_job(job):
+    job.redis.set('retools:job:%s' % job.job_id, job.to_json())
+
 
 def save_node(node):
     names = _QM.redis.smembers('retools:nodes')
@@ -88,6 +91,7 @@ def starting(job=None):
 def success(job=None, result=None):
     pl = job.redis.pipeline()
     job.metadata['ended'] = time.time()
+    save_job(job)
     result = json.dumps({'data': result})
     pl.srem('retools:started', job.job_id)
     #pl.delete('retools:job:%s' % job.job_id)
@@ -113,6 +117,7 @@ def failure(job=None, exc=None):
     # XXX
     pl = job.redis.pipeline()
     job.metadata['ended'] = time.time()
+    save_job(job)
     exc = json.dumps({'data': str(exc)})
     pl.srem('retools:started', job.job_id)
     #pl.delete('retools:job:%s' % job.job_id)
@@ -158,6 +163,7 @@ def purge():
 
     _QM.redis.delete('retools:consoles')
     _QM.redis.delete('retools:started')
+
     for node in get_nodes():
         node.status = 'idle'
         save_node(node)
