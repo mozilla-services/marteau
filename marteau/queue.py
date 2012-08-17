@@ -74,7 +74,7 @@ def get_result(job_id):
 
 def sorter(field):
     def _sort_jobs(job1, job2):
-        return cmp(job1.metadata[field], job2.metadata[field])
+        return -cmp(job1.metadata[field], job2.metadata[field])
     return _sort_jobs
 
 
