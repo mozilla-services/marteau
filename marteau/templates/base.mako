@@ -4,7 +4,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
   <link href='/media/marteau.css' rel='stylesheet' type='text/css'/>
-  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="shortcut icon" href="/media/small-logo.png">
   <title>Marteau</title> 
 </head>
   <body>

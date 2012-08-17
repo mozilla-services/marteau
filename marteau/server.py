@@ -214,12 +214,6 @@ def add_node():
     return node_name
 
 
-@route('/favicon.ico')
-def favicon():
-    return static_file('favicon.ico',  root=MEDIADIR,
-                       mimetype='image/x-icon')
-
-
 @route('/media/<filename:path>')
 def media_dir(filename):
     if filename == 'marteau.kar':
