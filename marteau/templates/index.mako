@@ -71,13 +71,14 @@ C'mon, I need some boxes.
 
 <div id="pending">
 <h2>Pending jobs</h2>
+<table>
 %for job in jobs:
-<div>
-<a href="/test/${job.job_id}">${job.metadata.get('repo', job.job_id)}</a> created at ${time2str(job.metadata.get('created'))}
-<a href="/test/${job.job_id}/cancel">[Cancel]</a>
-
-</div>
+<tr>
+  <td>${job.metadata.get('repo', job.job_id)}created at ${time2str(job.metadata.get('created'))}</td>
+  <td><a href="/test/${job.job_id}">[Console]</a></td>
+</tr>
 %endfor
+</table>
 %if not jobs:
 Nothing in my pile.
 %endif
@@ -85,12 +86,15 @@ Nothing in my pile.
 
 <div id="running">
 <h2>Running jobs</h2>
+<table>
 %for job in running:
-<div>
-    <a href="/test/${job.job_id}">${job.metadata.get('repo', job.job_id)}</a> started at ${time2str(job.metadata.get('started'))}
-    <a href="/test/${job.job_id}/cancel">[Cancel]</a>
-</div>
+<tr>
+  <td>${job.metadata.get('repo', job.job_id)} started at ${time2str(job.metadata.get('started'))}</td>
+  <td><a href="/test/${job.job_id}">[Console]</a></td>
+  <td><a href="/test/${job.job_id}/cancel">[Cancel]</a></td>
+</tr>
 %endfor
+</table>
 %if not running:
 I am bored !
 %endif
@@ -123,7 +127,7 @@ None, congrats! &mdash; although that's suspicious.
 <tr>
   <td>${job.metadata.get('repo', job.job_id)} ended at ${time2str(job.metadata.get('created'))}</td>
   <td><a href="/test/${job.job_id}">[Console]</a></td>
-  <td><a href="/report/${job.job_id}/index.html">[Funkload Report]</a></td>
+  <td><a href="/report/${job.job_id}/index.html">[Report]</a></td>
   <td><a href="/test/${job.job_id}/delete">[Delete]</a></td>
   <td><a href="/test/${job.job_id}/replay">[Replay]</a></td>
 </tr>
