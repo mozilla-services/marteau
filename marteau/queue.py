@@ -72,14 +72,24 @@ def get_result(job_id):
     return json.loads(res), console
 
 
+def sorter(field):
+    def _sort_jobs(job1, job2):
+        return cmp(job1.metadata[field], job2.metadata[field])
+    return _sort_jobs
+
+
 def get_failures():
-    return [get_job(job_id)
+    jobs = [get_job(job_id)
             for job_id in _QM.redis.smembers('retools:queue:failures')]
+    jobs.sort(sorter('ended'))
+    return jobs
 
 
 def get_successes():
-    return [get_job(job_id)
+    jobs = [get_job(job_id)
             for job_id in _QM.redis.smembers('retools:queue:successes')]
+    jobs.sort(sorter('ended'))
+    return jobs
 
 
 def starting(job=None):
