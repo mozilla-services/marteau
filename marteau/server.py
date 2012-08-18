@@ -132,13 +132,9 @@ def _get_result(jobid):
     if status is None:
         status = 'Running'
     else:
-        status = status['data']
-        if os.path.exists(status):
-            # we have a report
-            status = 'Finished.'
-            report = '/report/%s' % jobid
+        status = status['msg']
 
-    return res.render(status=status, console=console, report=report,
+    return res.render(status=status, console=console,
                       job=queue.get_job(jobid),
                       time2str=time2str)
 
