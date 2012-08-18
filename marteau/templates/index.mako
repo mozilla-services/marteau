@@ -75,7 +75,7 @@ C'mon, I need some boxes.
 %for job in jobs:
 <tr>
   <td>${job.metadata.get('repo', job.job_id)}created at ${time2str(job.metadata.get('created'))}</td>
-  <td><a href="/test/${job.job_id}">[Console]</a></td>
+  <td><a class="label" href="/test/${job.job_id}">Console</a></td>
 </tr>
 %endfor
 </table>
@@ -90,8 +90,8 @@ Nothing in my pile.
 %for job in running:
 <tr>
   <td>${job.metadata.get('repo', job.job_id)} started at ${time2str(job.metadata.get('started'))}</td>
-  <td><a href="/test/${job.job_id}">[Console]</a></td>
-  <td><a href="/test/${job.job_id}/cancel">[Cancel]</a></td>
+  <td><a class="label" href="/test/${job.job_id}">Console</a></td>
+  <td><a class="label" href="/test/${job.job_id}/cancel">Cancel</a></td>
 </tr>
 %endfor
 </table>
@@ -106,10 +106,10 @@ I am bored !
 <table>
 %for job in failures:
 <tr>
-  <td>${job.metadata.get('repo', job.job_id)} ended at ${time2str(job.metadata.get('ended'))}</td>
-  <td><a href="/test/${job.job_id}">[Console]</a></td>
-  <td><a href="/test/${job.job_id}/delete">[Delete]</a></td>
-  <td><a href="/test/${job.job_id}/replay">[Replay]</a></td>
+  <td>${job.metadata.get('repo', job.job_id)}</td>
+  <td><a class="label" href="/test/${job.job_id}">Console</a></td>
+  <td><a class="label" href="/test/${job.job_id}/delete">Delete</a></td>
+  <td><a class="label" href="/test/${job.job_id}/replay">Replay</a></td>
 </tr>
 %endfor
 </table>
@@ -125,11 +125,11 @@ None, congrats! &mdash; although that's suspicious.
 <table>
 %for job in successes:
 <tr>
-  <td>${job.metadata.get('repo', job.job_id)} ended at ${time2str(job.metadata.get('created'))}</td>
-  <td><a href="/test/${job.job_id}">[Console]</a></td>
-  <td><a href="/report/${job.job_id}/index.html">[Report]</a></td>
-  <td><a href="/test/${job.job_id}/delete">[Delete]</a></td>
-  <td><a href="/test/${job.job_id}/replay">[Replay]</a></td>
+  <td>${job.metadata.get('repo', job.job_id)}</td>
+  <td><a class="label" href="/test/${job.job_id}">Console</a></td>
+  <td><a class="label" href="/report/${job.job_id}/index.html">Report</a></td>
+  <td><a class="label" href="/test/${job.job_id}/delete">Delete</a></td>
+  <td><a class="label" href="/test/${job.job_id}/replay">Replay</a></td>
 </tr>
 %endfor
 </table>

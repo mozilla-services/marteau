@@ -28,7 +28,7 @@ h1.title {
 }
 
 h1.title a {
-  color: white; 
+  color: white;
 }
 
 div.section, div.abstract, div.contents, table.docinfo {
@@ -44,7 +44,6 @@ a.toc-backref {
 
 pre {
     font-family: 'Consolas','Deja Vu Sans Mono','Bitstream Vera Sans Mono',monospace;
-    margin: 1em 2em;
     font-size: 0.95em;
     letter-spacing: 0.015em;
     line-height: 120%;
@@ -182,4 +181,27 @@ table.nodes td {
     text-align: center;
     padding: 5px;
 
+}
+
+.label {
+    font-size: 75%;
+    font-weight: bold;
+    line-height: 14px;
+    color: rgb(255, 255, 255);
+    text-shadow: 0px -1px 0px rgba(0, 0, 0, 0.25);
+    white-space: nowrap;
+    vertical-align: baseline;
+    background-color: rgb(58, 135, 173);
+    padding: 1px 4px 2px;
+    border-radius: 3px 3px 3px 3px;
+}
+
+a.label {
+    text-decoration: none;
+}
+
+div.actions {
+  float: left;
+  margin-right: 20px;
+  margin-bottom: 20px;
 }

@@ -138,7 +138,9 @@ def _get_result(jobid):
             status = 'Finished.'
             report = '/report/%s' % jobid
 
-    return res.render(status=status, console=console, report=report)
+    return res.render(status=status, console=console, report=report,
+                      job=queue.get_job(jobid),
+                      time2str=time2str)
 
 
 @route('/nodes', method='GET')
