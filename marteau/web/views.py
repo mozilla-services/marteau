@@ -16,7 +16,7 @@ import paramiko
 
 from marteau.job import reportsdir
 from marteau.node import Node
-from marteau.web.schemas import JobSchema
+from marteau.web.schemas import JobSchema, NodeSchema
 import marteau
 
 
@@ -164,7 +164,7 @@ def _nodes(request):
 def enable_node(request):
     # load existing
     queue = request.registry['queue']
-    name = request.matchdict['node']
+    name = request.matchdict['name']
     node = queue.get_node(name)
 
     # update the flag
@@ -174,13 +174,13 @@ def enable_node(request):
     return HTTPFound(location='/nodes')
 
 
-@view_config(route_name='node_test', request_method='GET')
+@view_config(route_name='node_test', request_method='GET', renderer='string')
 def test_node(request):
     # trying an ssh connection
     connection = paramiko.client.SSHClient()
     connection.load_system_host_keys()
     connection.set_missing_host_key_policy(paramiko.WarningPolicy())
-    name = request.matchdict['node']
+    name = request.matchdict['name']
 
     host, port = urllib.splitport(name)
     if port is None:
@@ -208,7 +208,7 @@ def get_or_del_node(request):
     name = request.matchdict['name']
     queue = request.registry['queue']
 
-    if 'delete' in request.query:
+    if 'delete' in request.params:
         queue.delete_node(name)
         return HTTPFound(location='/nodes')
 
@@ -218,22 +218,16 @@ def get_or_del_node(request):
 @view_config(route_name='nodes', request_method='POST')
 def add_node(request):
     """Adds a run into Marteau"""
-    # xxx
-    node_name = request.forms.get('name')
-    if node_name is None:
-        node_name = request.body.read()
-        rest = True
-    else:
-        rest = False
+    form = Form(request, schema=NodeSchema)
 
+    if not form.validate():
+        return HTTPFound(location='/nodes?msg=Bad node name')
+
+    node_name = form.data.get('name')
     node = Node(name=node_name)
     queue = request.registry['queue']
     queue.save_node(node)
-
-    if not rest:
-        return HTTPFound(location='/nodes')
-
-    return node_name
+    return HTTPFound(location='/nodes')
 
 
 #@view_config('/media/<filename:path>')

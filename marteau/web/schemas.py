@@ -11,3 +11,11 @@ class JobSchema(Schema):
     duration = validators.Int()
     nodes = validators.Int()
     email = validators.Email()
+
+
+class NodeSchema(Schema):
+
+    filter_extra_fields = True
+    allow_extra_fields = True
+
+    name = validators.String(not_empty=True)
