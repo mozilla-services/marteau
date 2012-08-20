@@ -4,7 +4,7 @@ from ConfigParser import ConfigParser
 
 from bottle import run
 
-from marteau import __version__, logger
+from marteau import __version__, logger, queue
 from marteau.server import app
 from marteau.util import LOG_LEVELS, configure_logger
 
@@ -40,6 +40,8 @@ def main():
         config.read([args.config])
     app.config = config
 
+    # initializing the queue
+    app.queue = queue.Queue()
     logger.info('Hammer ready. Where are the nails ?')
     try:
         run(app, host=args.host, port=args.port)

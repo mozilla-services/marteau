@@ -9,8 +9,7 @@ from bottle import app, route, request, redirect, static_file
 from mako.lookup import TemplateLookup
 import paramiko
 
-from marteau import queue
-from marteau.job import reportsdir, cleanup_job
+from marteau.job import reportsdir
 from marteau.node import Node
 
 
@@ -22,9 +21,6 @@ JOBTIMEOUT = 3600    # one hour
 DOCDIR = os.path.join(CURDIR, 'docs', 'build', 'html')
 
 
-queue.initialize()
-
-
 def time2str(data):
     if data is None:
         return 'Unknown date'
@@ -33,6 +29,8 @@ def time2str(data):
 
 @route('/', method='GET')
 def index():
+    queue = app.queue
+
     index = TMPLS.get_template('index.mako')
     return index.render(jobs=queue.get_jobs(),
                         workers=queue.get_workers(),
@@ -47,14 +45,21 @@ def index():
 @route('/purge', method='GET')
 def purge():
     """Adds a run into Marteau"""
-    queue.purge()
+    app.queue.purge()
     return 'purged'
+
+
+@route('/reset', method='GET')
+def reset_nodes():
+    """Adds a run into Marteau"""
+    app.queue.reset_nodes()
+    return 'reset'
 
 
 @route('/test', method='GET')
 def get_all_jobs():
     """Adds a run into Marteau"""
-    return queue.get_jobs()
+    return app.queue.get_jobs()
 
 
 @route('/test', method='POST')
@@ -92,7 +97,7 @@ def add_run():
     except NoSectionError:
         options = {}
 
-    job_id = queue.enqueue('marteau.job:run_loadtest', repo=repo,
+    job_id = app.queue.enqueue('marteau.job:run_loadtest', repo=repo,
                            cycles=cycles, nodes_count=nodes, duration=duration,
                            metadata=metadata, email=email,
                            options=options)
@@ -105,20 +110,20 @@ def add_run():
 
 @route('/test/<jobid>/cancel', method='GET')
 def _cancel_job(jobid):
-    queue.cancel_job(jobid)
-    cleanup_job(jobid)
+    app.queue.cancel_job(jobid)
+    app.queue.cleanup_job(jobid)
     redirect('/')
 
 
 @route('/test/<jobid>/delete', method='GET')
 def _delete_job(jobid):
-    queue.delete_job(jobid)
+    app.queue.delete_job(jobid)
     redirect('/')
 
 
 @route('/test/<jobid>/replay', method='GET')
 def _requeue_job(jobid):
-    queue.replay(jobid)
+    app.queue.replay(jobid)
     redirect('/')
 
 
@@ -126,34 +131,32 @@ def _requeue_job(jobid):
 def _get_result(jobid):
     """Gets results from a run"""
     res = TMPLS.get_template('console.mako')
-    report = None
-    status, console = queue.get_result(jobid)
-
+    status, console = app.queue.get_result(jobid)
     if status is None:
         status = 'Running'
     else:
         status = status['msg']
 
     return res.render(status=status, console=console,
-                      job=queue.get_job(jobid),
+                      job=app.queue.get_job(jobid),
                       time2str=time2str)
 
 
 @route('/nodes', method='GET')
 def _nodes():
     res = TMPLS.get_template('nodes.mako')
-    return res.render(nodes=list(queue.get_nodes()))
+    return res.render(nodes=list(app.queue.get_nodes()))
 
 
 @route('/nodes/<name>/enable', method='GET')
 def enable_node(name):
     # load existing
-    node = queue.get_node(name)
+    node = app.queue.get_node(name)
 
     # update the flag
     node.enabled = not node.enabled
 
-    queue.save_node(node)
+    app.queue.save_node(node)
     redirect('/nodes')
 
 
@@ -188,10 +191,10 @@ def test_node(name):
 @route('/nodes/<name>', method='GET')
 def del_node(name):
     if 'delete' in request.query:
-        queue.delete_node(name)
+        app.queue.delete_node(name)
         redirect('/nodes')
 
-    return queue.get_node(name)
+    return app.queue.get_node(name)
 
 
 @route('/nodes', method='POST')
@@ -205,7 +208,7 @@ def add_node():
         rest = False
 
     node = Node(name=node_name)
-    queue.save_node(node)
+    app.queue.save_node(node)
     if not rest:
         return redirect('/nodes')
 

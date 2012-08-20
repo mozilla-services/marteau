@@ -7,91 +7,212 @@ from retools.queue import QueueManager, Worker, Job
 from marteau.node import Node
 
 
-_QM = None
+class Queue(object):
+
+    def __init__(self):
+        self._qm = QueueManager()
+        self._qm.subscriber('job_failure', handler='marteau.queue:failure')
+        self._qm.subscriber('job_postrun', handler='marteau.queue:success')
+        self._qm.subscriber('job_prerun', handler='marteau.queue:starting')
+        self._conn = self._qm.redis
+
+    def pid_to_jobid(self, pid):
+        return self._conn.get('retools:jobpid:%s' % str(pid))
+
+    def get_console(self, job_id):
+        return self._conn.get('retools:jobconsole:%s' % job_id)
+
+    def append_console(self, job_id, data):
+        key = 'retools:jobconsole:%s' % job_id
+        current = self._conn.get(key)
+        if current is not None:
+            data = current + data
+        self._conn.set(key, data)
+
+    def get_node(self, name):
+        data = self._conn.get('retools:node:%s' % name)
+        return Node(**json.loads(data))
+
+    def delete_node(self, name):
+        if not self._conn.sismember('retools:nodes', name):
+            return
+        self._conn.srem('retools:nodes', name)
+        self._conn.delete('retools:node:%s' % name)
+
+    def get_nodes(self):
+        names = self._conn.smembers('retools:nodes')
+        for name in sorted(names):
+            node = self._conn.get('retools:node:%s' % name)
+            yield Node(**json.loads(node))
+
+    def reset_nodes(self):
+        for node in self.get_nodes():
+            node.status = 'idle'
+            self.save_node(node)
+
+    def save_node(self, node):
+        names = self._conn.smembers('retools:nodes')
+        if node.name not in names:
+            self._conn.sadd('retools:nodes', node.name)
+        self._conn.set('retools:node:%s' % node.name, node.to_json())
+
+    def purge_console(self, job_id):
+        key = 'retools:jobconsole:%s' % job_id
+        try:
+            return self._conn.get(key)
+        finally:
+            self._conn.delete(key)
+
+    def get_result(self, job_id):
+        res = self._conn.lindex('retools:result:%s' % job_id, 0)
+        console = self.get_console(job_id)
+        if res is None:
+            return None, console
+        return json.loads(res), console
+
+    def sorter(self, field):
+        def _sort_jobs(job1, job2):
+            return -cmp(job1.metadata[field], job2.metadata[field])
+        return _sort_jobs
+
+    def get_failures(self):
+        jobs = [self.get_job(job_id)
+                for job_id in self._conn.smembers('retools:queue:failures')]
+        jobs.sort(self.sorter('ended'))
+        return jobs
+
+    def get_successes(self):
+        jobs = [self.get_job(job_id)
+                for job_id in self._conn.smembers('retools:queue:successes')]
+        jobs.sort(self.sorter('ended'))
+        return jobs
+
+    def delete_job(self, job_id):
+        self._conn.delete('retools:started', job_id)
+        self._conn.delete('retools:job:%s' % job_id)
+        self._conn.delete('retools:jobpid:%s' % job_id)
+        self._conn.delete('retools:jobconsole:%s' % job_id)
+        if self._conn.sismember('retools:consoles', job_id):
+            self._conn.srem('retools:consoles', job_id)
+        self._conn.srem('retools:queue:failures', job_id)
+        self._conn.srem('retools:queue:successes', job_id)
+
+    def purge(self):
+        for queue in self._conn.smembers('retools:queues'):
+            self._conn.delete('retools:queue:%s' % queue)
+
+        for job_id in self._conn.smembers('retools:queue:started'):
+            self._conn.delete('retools:job:%s' % job_id)
+            self._conn.delete('retools:jobpid:%s' % job_id)
+
+        self._conn.delete('retools:queue:failures')
+        self._conn.delete('retools:queue:successes')
+        self._conn.delete('retools:queue:starting')
+
+        for job_id in self._conn.smembers('retools:consoles'):
+            self._conn.delete('retools:jobconsole:%s' % job_id)
+
+        self._conn.delete('retools:consoles')
+        self._conn.delete('retools:started')
+
+        for node in self.get_nodes():
+            node.status = 'idle'
+            self.save_node(node)
+
+    def cancel_job(self, job_id):
+
+        # first, find out which worker is working on this
+        for worker_id in self._conn.smembers('retools:workers'):
+            status_key = "retools:worker:%s" % worker_id
+            status = self._conn.get(status_key)
+            if status is None:
+                continue
+
+            status = json.loads(status)
+            job_payload = status['payload']
+            if job_payload['job_id'] != job_id:
+                continue
+
+            # that's the worker !
+            # get its pid and ask it to stop
+            pid = int(worker_id.split(':')[1])
+            os.kill(pid, signal.SIGUSR1)
+            break
+        # XXX we make the assumption all went well...
+
+    def replay(self, job_id):
+        job = self.get_job(job_id)
+        data = job.to_dict()
+        job_name = data['job']
+        kwargs = data['kwargs']
+
+        metadata = {'created': time.time(),
+                    'repo': data['metadata']['repo']}
+
+        kwargs['metadata'] = metadata
+        self.enqueue(job_name, **kwargs)
+
+    def enqueue(self, funcname, **kwargs):
+        return self._qm.enqueue(funcname, **kwargs)
+
+    def _get_job(self, job_id, queue_names, redis):
+        for queue_name in queue_names:
+            current_len = self._conn.llen(queue_name)
+
+            # that's O(n), we should do better
+            for i in range(current_len):
+                # the list can change while doing this
+                # so we need to catch any index error
+                job = self._conn.lindex(queue_name, i)
+                job_data = json.loads(job)
+
+                if job_data['job_id'] == job_id:
+                    return Job(queue_name, job, redis)
+        raise IndexError(job_id)
+
+    def get_job(self, job_id):
+        try:
+            return self._qm.get_job(job_id)
+        except IndexError:
+            job = self._conn.get('retools:job:%s' % job_id)
+            if job is None:
+                raise
+            return Job(self._qm.default_queue_name, job, self._conn)
+
+    def get_jobs(self):
+        return list(self._qm.get_jobs())
+
+    def get_running_jobs(self):
+        return [self.get_job(job_id)
+                for job_id in self._conn.smembers('retools:started')]
+
+    def get_workers(self):
+        ids = list(Worker.get_worker_ids(redis=self._conn))
+        return [wid.split(':')[1] for wid in ids]
+
+    def delete_pids(self, job_id):
+        self._conn.delete('retools:%s:pids' % job_id)
+
+    def add_pid(self, job_id, pid):
+        self._conn.sadd('retools:%s:pids' % job_id, str(pid))
+
+    def remove_pid(self, job_id, pid):
+        self._conn.srem('retools:%s:pids' % job_id, str(pid))
+
+    def get_pids(self, job_id):
+        return [int(pid) for pid in
+                self._conn.smembers('retools:%s:pids' % job_id)]
+
+    def cleanup_job(self, job_id):
+        for pid in self.get_pids(job_id):
+            os.kill(pid, signal.SIGTERM)
+
+        self.delete_pids(job_id)
 
 
-def pid_to_jobid(pid):
-    return _QM.redis.get('retools:jobpid:%s' % str(pid))
-
-
-def get_console(job_id):
-    return _QM.redis.get('retools:jobconsole:%s' % job_id)
-
-
-def append_console(job_id, data):
-    key = 'retools:jobconsole:%s' % job_id
-    current = _QM.redis.get(key)
-    if current is not None:
-        data = current + data
-    _QM.redis.set(key, data)
-
-
-def get_node(name):
-    data = _QM.redis.get('retools:node:%s' % name)
-    return Node(**json.loads(data))
-
-
-def delete_node(name):
-    if not _QM.redis.sismember('retools:nodes', name):
-        return
-    _QM.redis.srem('retools:nodes', name)
-    _QM.redis.delete('retools:node:%s' % name)
-
-
-def get_nodes():
-    names = _QM.redis.smembers('retools:nodes')
-    for name in sorted(names):
-        node = _QM.redis.get('retools:node:%s' % name)
-        yield Node(**json.loads(node))
-
-
-def save_job(job):
-    job.redis.set('retools:job:%s' % job.job_id, job.to_json())
-
-
-def save_node(node):
-    names = _QM.redis.smembers('retools:nodes')
-    if node.name not in names:
-        _QM.redis.sadd('retools:nodes', node.name)
-    _QM.redis.set('retools:node:%s' % node.name, node.to_json())
-
-
-def purge_console(job_id):
-    key = 'retools:jobconsole:%s' % job_id
-    try:
-        return _QM.redis.get(key)
-    finally:
-        _QM.redis.delete(key)
-
-
-def get_result(job_id):
-    res = _QM.redis.lindex('retools:result:%s' % job_id, 0)
-    console = get_console(job_id)
-    if res is None:
-        return None, console
-    return json.loads(res), console
-
-
-def sorter(field):
-    def _sort_jobs(job1, job2):
-        return -cmp(job1.metadata[field], job2.metadata[field])
-    return _sort_jobs
-
-
-def get_failures():
-    jobs = [get_job(job_id)
-            for job_id in _QM.redis.smembers('retools:queue:failures')]
-    jobs.sort(sorter('ended'))
-    return jobs
-
-
-def get_successes():
-    jobs = [get_job(job_id)
-            for job_id in _QM.redis.smembers('retools:queue:successes')]
-    jobs.sort(sorter('ended'))
-    return jobs
-
-
+#
+# Events
+#
 def starting(job=None):
     os.environ['MARTEAU_JOBID'] = job.job_id
     job.metadata['started'] = time.time()
@@ -106,7 +227,6 @@ def success(job=None, result=None):
     save_job(job)
     result = json.dumps({'data': result, 'msg': 'Success'})
     pl.srem('retools:started', job.job_id)
-    #pl.delete('retools:job:%s' % job.job_id)
     pl.delete('retools:jobpid:%s' % str(os.getpid()))
     pl.sadd('retools:queue:successes', job.job_id)
     pl.lpush('retools:result:%s' % job.job_id, result)
@@ -116,11 +236,19 @@ def success(job=None, result=None):
     if nodes is not None:
         nodes = nodes.split(',')
         for name in nodes:
-            node = get_node(name)
+            data = job.redis.get('retools:node:%s' % name)
+            node = Node(**json.loads(data))
             node.status = 'idle'
-            save_node(node)
+            names = job.redis.smembers('retools:nodes')
+            if node.name not in names:
+                job.redis.sadd('retools:nodes', node.name)
+            job.redis.set('retools:node:%s' % node.name, node.to_json())
 
     pl.execute()
+
+
+def save_job(job):
+    job.redis.set('retools:job:%s' % job.job_id, job.to_json())
 
 
 def failure(job=None, exc=None):
@@ -130,166 +258,30 @@ def failure(job=None, exc=None):
     pl = job.redis.pipeline()
     job.metadata['ended'] = time.time()
     save_job(job)
-    exc = json.dumps({'msg': 'Error', 'data': str(exc)})
+    dump = json.dumps({'msg': 'Error', 'data': str(exc)})
+    console_key = 'retools:jobconsole:%s' % job.job_id
+    current = job.redis.get(console_key)
+    if current is not None:
+        data = current + str(exc)
+    else:
+        data = str(exc)
+    pl.set(console_key, data)
     pl.srem('retools:started', job.job_id)
-    #pl.delete('retools:job:%s' % job.job_id)
     pl.delete('retools:jobpid:%s' % str(os.getpid()))
     pl.sadd('retools:queue:failures', job.job_id)
-    pl.lpush('retools:result:%s' % job.job_id, exc)
+    pl.lpush('retools:result:%s' % job.job_id, dump)
     pl.sadd('retools:consoles', job.job_id)
     pl.expire('retools:result:%s', 3600)
     nodes = os.environ.get('MARTEAU_NODES')
     if nodes is not None:
         nodes = nodes.split(',')
         for name in nodes:
-            node = get_node(name)
+            data = job.redis.get('retools:node:%s' % name)
+            node = Node(**json.loads(data))
             node.status = 'idle'
-            save_node(node)
+            names = job.redis.smembers('retools:nodes')
+            if node.name not in names:
+                job.redis.sadd('retools:nodes', node.name)
+            job.redis.set('retools:node:%s' % node.name, node.to_json())
+
     pl.execute()
-
-
-def delete_job(job_id):
-    _QM.redis.delete('retools:started', job_id)
-    _QM.redis.delete('retools:job:%s' % job_id)
-    _QM.redis.delete('retools:jobpid:%s' % job_id)
-    _QM.redis.delete('retools:jobconsole:%s' % job_id)
-    if _QM.redis.sismember('retools:consoles', job_id):
-        _QM.redis.srem('retools:consoles', job_id)
-    _QM.redis.srem('retools:queue:failures', job_id)
-    _QM.redis.srem('retools:queue:successes', job_id)
-
-
-def purge():
-    for queue in _QM.redis.smembers('retools:queues'):
-        _QM.redis.delete('retools:queue:%s' % queue)
-
-    for job_id in _QM.redis.smembers('retools:queue:started'):
-        _QM.redis.delete('retools:job:%s' % job_id)
-        _QM.redis.delete('retools:jobpid:%s' % job_id)
-
-    _QM.redis.delete('retools:queue:failures')
-    _QM.redis.delete('retools:queue:successes')
-    _QM.redis.delete('retools:queue:starting')
-
-    for job_id in _QM.redis.smembers('retools:consoles'):
-        _QM.redis.delete('retools:jobconsole:%s' % job_id)
-
-    _QM.redis.delete('retools:consoles')
-    _QM.redis.delete('retools:started')
-
-    for node in get_nodes():
-        node.status = 'idle'
-        save_node(node)
-
-
-def initialize():
-    global _QM
-    if _QM is not None:
-        return
-    _QM = QueueManager()
-    _QM.subscriber('job_failure', handler='marteau.queue:failure')
-    _QM.subscriber('job_postrun', handler='marteau.queue:success')
-    _QM.subscriber('job_prerun', handler='marteau.queue:starting')
-
-
-# XXX should be in the app init
-initialize()
-
-
-def cancel_job(job_id):
-    redis = _QM.redis
-
-    # first, find out which worker is working on this
-    for worker_id in redis.smembers('retools:workers'):
-        status_key = "retools:worker:%s" % worker_id
-        status = redis.get(status_key)
-
-        if status is None:
-            continue
-        status = json.loads(status)
-        job_payload = status['payload']
-        if job_payload['job_id'] != job_id:
-            continue
-
-        # that's the worker !
-        # get its pid and ask it to stop
-        pid = int(worker_id.split(':')[1])
-        os.kill(pid, signal.SIGUSR1)
-
-        break
-
-    # XXX we make the assumption all went well...
-
-
-def replay(job_id):
-    job = get_job(job_id)
-    data = job.to_dict()
-    job_name = data['job']
-    kwargs = data['kwargs']
-
-    metadata = {'created': time.time(),
-                'repo': data['metadata']['repo']}
-
-    kwargs['metadata'] = metadata
-    enqueue(job_name, **kwargs)
-
-
-def enqueue(funcname, **kwargs):
-    return _QM.enqueue(funcname, **kwargs)
-
-
-def _get_job(job_id, queue_names, redis):
-    for queue_name in queue_names:
-        current_len = redis.llen(queue_name)
-
-        # that's O(n), we should do better
-        for i in range(current_len):
-            # the list can change while doing this
-            # so we need to catch any index error
-            job = redis.lindex(queue_name, i)
-            job_data = json.loads(job)
-
-            if job_data['job_id'] == job_id:
-                return Job(queue_name, job, redis)
-
-    raise IndexError(job_id)
-
-
-def get_job(job_id):
-    try:
-        return _QM.get_job(job_id)
-    except IndexError:
-        job = _QM.redis.get('retools:job:%s' % job_id)
-        if job is None:
-            raise
-        return Job(_QM.default_queue_name, job, _QM.redis)
-
-
-def get_jobs():
-    return list(_QM.get_jobs())
-
-
-def get_running_jobs():
-    return [get_job(job_id)
-            for job_id in _QM.redis.smembers('retools:started')]
-
-
-def get_workers():
-    ids = list(Worker.get_worker_ids(redis=_QM.redis))
-    return [wid.split(':')[1] for wid in ids]
-
-
-def delete_pids(job_id):
-    _QM.redis.delete('retools:%s:pids' % job_id)
-
-
-def add_pid(job_id, pid):
-    _QM.redis.sadd('retools:%s:pids' % job_id, str(pid))
-
-
-def remove_pid(job_id, pid):
-    _QM.redis.srem('retools:%s:pids' % job_id, str(pid))
-
-
-def get_pids(job_id):
-    return [int(pid) for pid in _QM.redis.smembers('retools:%s:pids' % job_id)]
