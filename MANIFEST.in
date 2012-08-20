@@ -1,1 +1,3 @@
 recursive-include marteau/docs *.*
+recursive-include marteau/templates *.mako
+recursive-include marteau/media *.*

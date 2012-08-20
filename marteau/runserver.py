@@ -1,11 +1,10 @@
 import argparse
 import sys
 from ConfigParser import ConfigParser
-
-from bottle import run
+from wsgiref.simple_server import make_server
 
 from marteau import __version__, logger, queue
-from marteau.server import app
+from marteau.web import main as webapp
 from marteau.util import LOG_LEVELS, configure_logger
 
 
@@ -22,8 +21,6 @@ def main():
             help="log output")
     parser.add_argument('--host', help='Host', default='0.0.0.0')
     parser.add_argument('--port', help='port', default=8080)
-    #parser.add_argument('--server', help='web server to use',
-    #                    default=SocketIOServer)
     args = parser.parse_args()
 
     if args.version:
@@ -38,13 +35,21 @@ def main():
     if args.config is not None:
         logger.info('Loading %r' % args.config)
         config.read([args.config])
-    app.config = config
 
-    # initializing the queue
-    app.queue = queue.Queue()
+
+    # loading the app & the queue
+    global_config = {}
+    if config.has_section('marteau'):
+        settings = dict(config.items('marteau'))
+    else:
+        settings = {}
+    app = webapp(global_config, **settings)
+
+
     logger.info('Hammer ready. Where are the nails ?')
     try:
-        run(app, host=args.host, port=args.port)
+        httpd = make_server(args.host, args.port, app)
+        httpd.serve_forever()
     except KeyboardInterrupt:
         sys.exit(0)
     finally:
