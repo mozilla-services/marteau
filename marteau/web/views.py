@@ -9,8 +9,7 @@ from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 from pyramid.response import FileResponse
 from pyramid_simpleform import Form
-from pyramid_simpleform.renderers import FormRenderer
-
+#from pyramid_simpleform.renderers import FormRenderer
 
 from mako.lookup import TemplateLookup
 import paramiko
@@ -154,21 +153,24 @@ def _get_result(request):
             'time2str': time2str}
 
 
-@view_config(route_name='nodes', request_method='GET')
+@view_config(route_name='nodes', request_method='GET',
+             renderer='nodes.mako')
 def _nodes(request):
-    res = TMPLS.get_template('nodes.mako')
-    return res.render(nodes=list(app.queue.get_nodes()))
+    queue = request.registry['queue']
+    return {'nodes': list(queue.get_nodes())}
 
 
 @view_config(route_name='node_enable', request_method='GET')
 def enable_node(request):
     # load existing
-    node = app.queue.get_node(name)
+    queue = request.registry['queue']
+    name = request.matchdict['node']
+    node = queue.get_node(name)
 
     # update the flag
     node.enabled = not node.enabled
 
-    app.queue.save_node(node)
+    queue.save_node(node)
     return HTTPFound(location='/nodes')
 
 
@@ -178,6 +180,7 @@ def test_node(request):
     connection = paramiko.client.SSHClient()
     connection.load_system_host_keys()
     connection.set_missing_host_key_policy(paramiko.WarningPolicy())
+    name = request.matchdict['node']
 
     host, port = urllib.splitport(name)
     if port is None:
@@ -203,12 +206,13 @@ def test_node(request):
 @view_config(route_name='node', request_method='GET')
 def get_or_del_node(request):
     name = request.matchdict['name']
+    queue = request.registry['queue']
 
     if 'delete' in request.query:
-        app.queue.delete_node(name)
+        queue.delete_node(name)
         return HTTPFound(location='/nodes')
 
-    return app.queue.get_node(name)
+    return queue.get_node(name)
 
 
 @view_config(route_name='nodes', request_method='POST')
@@ -223,7 +227,9 @@ def add_node(request):
         rest = False
 
     node = Node(name=node_name)
-    app.queue.save_node(node)
+    queue = request.registry['queue']
+    queue.save_node(node)
+
     if not rest:
         return HTTPFound(location='/nodes')
 

@@ -3,7 +3,7 @@ import sys
 from ConfigParser import ConfigParser
 from wsgiref.simple_server import make_server
 
-from marteau import __version__, logger, queue
+from marteau import __version__, logger
 from marteau.web import main as webapp
 from marteau.util import LOG_LEVELS, configure_logger
 
@@ -36,16 +36,14 @@ def main():
         logger.info('Loading %r' % args.config)
         config.read([args.config])
 
-
     # loading the app & the queue
     global_config = {}
     if config.has_section('marteau'):
         settings = dict(config.items('marteau'))
     else:
         settings = {}
+
     app = webapp(global_config, **settings)
-
-
     logger.info('Hammer ready. Where are the nails ?')
     try:
         httpd = make_server(args.host, args.port, app)

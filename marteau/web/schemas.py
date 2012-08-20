@@ -1,4 +1,3 @@
-
 from formencode import Schema, validators
 
 
@@ -12,4 +11,3 @@ class JobSchema(Schema):
     duration = validators.Int()
     nodes = validators.Int()
     email = validators.Email()
-
