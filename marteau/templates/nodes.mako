@@ -22,6 +22,7 @@
             <th>Name</th>
             <th>Enabled?</th>
             <th>Status</th>
+            <th>Owner</th>
             <th/>
             <th/>
         </tr>
@@ -39,6 +40,7 @@
               </a>
             </td>
             <td>${node.status}</td>
+            <td>${node.owner}</td>
             <td>
               <form action="/nodes/${node.name}/test" method='GET' target="_blank">
                 <input type="submit" name="test" value="test connection"/>

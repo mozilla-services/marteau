@@ -10,7 +10,9 @@ install_requires = ['funkload', 'pyramid',
                     'virtualenv', 'Sphinx',
                     'pyramid_simpleform',
                     'formencode',
-                    'pyramid_beaker'
+                    'pyramid_beaker',
+                    'pyramid_whoauth',
+                    'repoze.who.plugins.browserid'
                     ]
 
 

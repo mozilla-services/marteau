@@ -10,6 +10,8 @@ from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 from pyramid.response import FileResponse
 from pyramid_simpleform import Form
 #from pyramid_simpleform.renderers import FormRenderer
+from pyramid.security import authenticated_userid
+from pyramid.exceptions import Forbidden
 
 from mako.lookup import TemplateLookup
 import paramiko
@@ -216,6 +218,10 @@ def get_or_del_node(request):
 @view_config(route_name='nodes', request_method='POST')
 def add_node(request):
     """Adds a run into Marteau"""
+    owner = authenticated_userid(request)
+    if owner is None:
+        raise Forbidden()
+
     form = Form(request, schema=NodeSchema)
 
     if not form.validate():
@@ -223,7 +229,7 @@ def add_node(request):
         return HTTPFound(location='/nodes')
 
     node_name = form.data.get('name')
-    node = Node(name=node_name)
+    node = Node(name=node_name, owner=owner)
     queue = request.registry['queue']
     queue.save_node(node)
     return HTTPFound(location='/nodes')
