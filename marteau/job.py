@@ -165,7 +165,7 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
 
         # we want to pick up the number of nodes asked
         nodes = [node for node in queue.get_nodes()
-                    if node.status == 'idle']
+                 if node.status == 'idle' and node.enabled]
 
         if len(nodes) < nodes_count:
             # XXX we want to pile this one back !
