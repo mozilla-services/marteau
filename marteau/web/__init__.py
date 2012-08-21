@@ -1,11 +1,20 @@
 from marteau import queue
 from pyramid.config import Configurator
+from pyramid_beaker import session_factory_from_settings
 
 
 def main(global_config, **settings):
     settings['mako.directories'] = 'marteau:templates'
+    settings['pyramid.includes'] = ['pyramid_beaker']
+    settings['session.type'] = 'file'
+    settings['session.data_dir'] = '%(here)s/data/sessions/data'
+    settings['session.lock_dir'] = '%(here)s/data/sessions/lock'
+    settings['session.key'] = 'wqdIinsjb867'
+    settings['session.secret'] = 'qwiqbUYbubsuygsUVvu'
+    settings['session.cookie_on_exception'] = True
+    session_factory = session_factory_from_settings(settings)
 
-    config = Configurator(settings=settings)
+    config = Configurator(settings=settings, session_factory=session_factory)
     config.registry['queue'] = queue.Queue()
 
     config.add_route('index', '/')

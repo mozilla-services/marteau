@@ -45,7 +45,8 @@ def index(request):
             'successes': queue.get_successes(),
             'get_result': queue.get_result,
             'running': queue.get_running_jobs(),
-            'time2str': time2str}
+            'time2str': time2str,
+            'messages': request.session.pop_flash()}
 
 
 @view_config(route_name='purge', request_method='GET')
@@ -74,13 +75,10 @@ def add_run(request):
     form = Form(request, schema=JobSchema)
 
     if not form.validate():
-        #rendered = FormRenderer(form)
         items = form.errors.items()
-        # should use a session here
-        msg = '%s for %s' % (items[0][1], items[0][0])
-        # render the index with the errors.
-        #
-        return HTTPFound('/?msg=%s' % msg)
+        msg = '%s for "%s"' % (items[0][1], items[0][0])
+        request.session.flash(msg)
+        return HTTPFound('/')
 
     data = form.data
     repo = data.get('repo')
@@ -221,7 +219,8 @@ def add_node(request):
     form = Form(request, schema=NodeSchema)
 
     if not form.validate():
-        return HTTPFound(location='/nodes?msg=Bad node name')
+        request.session.flash("Bad node name")
+        return HTTPFound(location='/nodes')
 
     node_name = form.data.get('name')
     node = Node(name=node_name)

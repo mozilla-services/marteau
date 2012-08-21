@@ -205,3 +205,14 @@ div.actions {
   margin-right: 20px;
   margin-bottom: 20px;
 }
+
+div.message {
+  margin-right: 25px;
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px dotted rgb(203, 200, 185);
+  background: none repeat scroll 0% 0% rgb(246, 246, 242);
+  float: right;
+  color: black;
+}
+

@@ -9,7 +9,8 @@ install_requires = ['funkload', 'pyramid',
                     'Mako', 'retools',
                     'virtualenv', 'Sphinx',
                     'pyramid_simpleform',
-                    'formencode'
+                    'formencode',
+                    'pyramid_beaker'
                     ]
 
 
