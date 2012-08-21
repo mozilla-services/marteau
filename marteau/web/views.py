@@ -105,7 +105,9 @@ def add_run(request):
     queue = request.registry['queue']
 
     try:
-        options = request.registry.settings
+        options = dict(request.registry.settings)
+        if 'who.api_factory' in options:
+            del options['who.api_factory']
     except NoSectionError:
         options = {}
 
