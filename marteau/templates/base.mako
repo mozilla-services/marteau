@@ -18,7 +18,7 @@
         Hi ${user}. <a href="/logout">Logout.</a>
         %endif
         %if not user:
-        <a href="/login">Login.</a>
+        <a href="/sign"><img src="/media/sign_in_blue.png"/></a>
       %endif
       </div>
 

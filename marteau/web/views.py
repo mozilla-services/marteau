@@ -294,6 +294,12 @@ def doc_dir(request):
     path = os.path.join(DOCDIR, filename)
     return FileResponse(path, request)
 
+@view_config(route_name='sign')
+def sign(request):
+    if authenticated_userid(request) is None:
+        raise Forbidden()
+    return HTTPFound(location='/')
+
 
 @view_config(route_name='logout')
 def logout(request):
