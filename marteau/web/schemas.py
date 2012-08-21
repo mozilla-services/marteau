@@ -10,7 +10,7 @@ class JobSchema(Schema):
     redirect_url = validators.String()
     duration = validators.Int()
     nodes = validators.Int()
-    email = validators.Email()
+    #email = validators.Email()
 
 
 class NodeSchema(Schema):

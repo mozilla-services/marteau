@@ -32,6 +32,7 @@ def main(global_config, **settings):
 
     # routing
     config.add_route('index', '/')
+    config.add_route('logout', '/logout')
     config.add_route('purge', '/purge')
     config.add_route('reset', '/reset')
     config.add_route('test', '/test')

@@ -13,16 +13,24 @@
         <a href="/" id="title">Marteau</a>
         <span id="subtitle">Hammering your web services since 2012</span>
         <a href="/media/marteau.kar">don't</a>
+      <div class="login">
+        %if user:
+        Hi ${user}. <a href="/logout">Logout.</a>
+        %endif
+        %if not user:
+        <a href="/login">Login.</a>
+      %endif
+      </div>
+
        %if messages:
          %for message in messages:
          <div class="message">
             ${message}
          </div>
-         %endfor
-         <div style="clear:both"></div>
-       %endif
-
-     </div>
+       %endfor
+     %endif
+    </div>
+    <div style="clear:both"></div>
      <div id="body">
        ${self.body()}
    </div>

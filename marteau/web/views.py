@@ -10,7 +10,7 @@ from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 from pyramid.response import FileResponse
 from pyramid_simpleform import Form
 #from pyramid_simpleform.renderers import FormRenderer
-from pyramid.security import authenticated_userid
+from pyramid.security import authenticated_userid, forget
 from pyramid.exceptions import Forbidden
 
 from mako.lookup import TemplateLookup
@@ -48,7 +48,8 @@ def index(request):
             'get_result': queue.get_result,
             'running': queue.get_running_jobs(),
             'time2str': time2str,
-            'messages': request.session.pop_flash()}
+            'messages': request.session.pop_flash(),
+            'user': authenticated_userid(request)}
 
 
 @view_config(route_name='purge', request_method='GET')
@@ -74,6 +75,10 @@ def get_all_jobs(request):
 @view_config(route_name='test', request_method='POST')
 def add_run(request):
     """Adds a run into Marteau"""
+    owner = authenticated_userid(request)
+    if owner is None:
+        raise Forbidden()
+
     form = Form(request, schema=JobSchema)
 
     if not form.validate():
@@ -88,8 +93,6 @@ def add_run(request):
     cycles = data.get('cycles')
     duration = data.get('duration')
     nodes = data.get('nodes')
-    email = data.get('email')
-
     metadata = {'created': time.time(),
                 'repo': repo}
 
@@ -102,7 +105,7 @@ def add_run(request):
 
     job_id = queue.enqueue('marteau.job:run_loadtest', repo=repo,
                            cycles=cycles, nodes_count=nodes, duration=duration,
-                           metadata=metadata, email=email,
+                           metadata=metadata, email=owner,
                            options=options)
 
     if redirect_url is not None:
@@ -278,3 +281,10 @@ def doc_dir(request):
 
     path = os.path.join(DOCDIR, filename)
     return FileResponse(path, request)
+
+
+@view_config(route_name='logout')
+def logout(request):
+    headers = forget(request)
+    request.session.flash("Logged out")
+    return HTTPFound(location='/', headers=headers)
