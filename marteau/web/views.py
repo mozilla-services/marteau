@@ -116,6 +116,8 @@ def add_run(request):
 
 @view_config(route_name='cancel', request_method='GET')
 def _cancel_job(request):
+    if authenticated_userid(request) is None:
+        raise Forbidden()
     jobid = request.matchdict['jobid']
     queue = request.registry['queue']
     queue.cancel_job(jobid)
@@ -125,6 +127,8 @@ def _cancel_job(request):
 
 @view_config(route_name='delete', request_method='GET')
 def _delete_job(request):
+    if authenticated_userid(request) is None:
+        raise Forbidden()
     jobid = request.matchdict['jobid']
     queue = request.registry['queue']
     queue.delete_job(jobid)
@@ -133,6 +137,8 @@ def _delete_job(request):
 
 @view_config(route_name='replay', request_method='GET')
 def _requeue_job(request):
+    if authenticated_userid(request) is None:
+        raise Forbidden()
     jobid = request.matchdict['jobid']
     queue = request.registry['queue']
     queue.replay(jobid)
@@ -165,6 +171,8 @@ def _nodes(request):
 
 @view_config(route_name='node_enable', request_method='GET')
 def enable_node(request):
+    if authenticated_userid(request) is None:
+        raise Forbidden()
     # load existing
     queue = request.registry['queue']
     name = request.matchdict['name']
@@ -179,6 +187,8 @@ def enable_node(request):
 
 @view_config(route_name='node_test', request_method='GET', renderer='string')
 def test_node(request):
+    if authenticated_userid(request) is None:
+        raise Forbidden()
     # trying an ssh connection
     connection = paramiko.client.SSHClient()
     connection.load_system_host_keys()
@@ -212,6 +222,8 @@ def get_or_del_node(request):
     queue = request.registry['queue']
 
     if 'delete' in request.params:
+        if authenticated_userid(request) is None:
+            raise Forbidden()
         queue.delete_node(name)
         return HTTPFound(location='/nodes')
 
