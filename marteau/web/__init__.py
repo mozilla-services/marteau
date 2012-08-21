@@ -14,9 +14,11 @@ def main(global_config, **settings):
     settings['session.cookie_on_exception'] = True
     session_factory = session_factory_from_settings(settings)
 
-    settings['who.plugin.authtkt.use'] = "repoze.who.plugins.auth_tkt:make_plugin",
+    settings['who.plugin.authtkt.use'] = \
+            "repoze.who.plugins.auth_tkt:make_plugin",
     settings['who.plugin.authtkt.secret'] = "OH_SO_SECRET"
-    settings['who.plugin.browserid.use'] = "repoze.who.plugins.browserid:make_plugin"
+    settings['who.plugin.browserid.use'] = \
+            "repoze.who.plugins.browserid:make_plugin"
     settings['who.plugin.browserid.audiences'] = "localhost:8080"
     settings['who.plugin.browserid.postback_url'] = "/login"
     settings['who.identifiers.plugins'] = "authtkt browserid"

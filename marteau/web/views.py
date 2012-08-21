@@ -38,6 +38,7 @@ def time2str(data):
 
 @view_config(route_name='index', request_method='GET', renderer='index.mako')
 def index(request):
+    """Index page."""
     queue = request.registry['queue']
 
     return {'jobs': queue.get_jobs(),
@@ -54,7 +55,7 @@ def index(request):
 
 @view_config(route_name='purge', request_method='GET')
 def purge(request):
-    """Adds a run into Marteau"""
+    """Purges all queues in Redis"""
     if authenticated_userid(request) is None:
         raise Forbidden()
     request.registry['queue'].purge()
@@ -64,7 +65,7 @@ def purge(request):
 
 @view_config(route_name='reset', request_method='GET')
 def reset_nodes(request):
-    """Adds a run into Marteau"""
+    """Resets the nodes state to idle."""
     if authenticated_userid(request) is None:
         raise Forbidden()
     request.registry['queue'].reset_nodes()
@@ -74,7 +75,7 @@ def reset_nodes(request):
 
 @view_config(route_name='test', request_method='GET')
 def get_all_jobs(request):
-    """Adds a run into Marteau"""
+    """Returns all Job"""
     return request.registry['queue'].get_jobs()
 
 
@@ -124,6 +125,7 @@ def add_run(request):
 
 @view_config(route_name='cancel', request_method='GET')
 def _cancel_job(request):
+    """Cancels a running Job."""
     if authenticated_userid(request) is None:
         raise Forbidden()
     jobid = request.matchdict['jobid']
@@ -135,6 +137,7 @@ def _cancel_job(request):
 
 @view_config(route_name='delete', request_method='GET')
 def _delete_job(request):
+    """Deletes a job."""
     if authenticated_userid(request) is None:
         raise Forbidden()
     jobid = request.matchdict['jobid']
@@ -145,6 +148,7 @@ def _delete_job(request):
 
 @view_config(route_name='replay', request_method='GET')
 def _requeue_job(request):
+    """Replay a job."""
     if authenticated_userid(request) is None:
         raise Forbidden()
     jobid = request.matchdict['jobid']
@@ -177,6 +181,7 @@ def _get_result(request):
 @view_config(route_name='nodes', request_method='GET',
              renderer='nodes.mako')
 def _nodes(request):
+    """Nodes page"""
     queue = request.registry['queue']
     return {'nodes': list(queue.get_nodes()),
             'user': authenticated_userid(request)}
@@ -184,6 +189,7 @@ def _nodes(request):
 
 @view_config(route_name='node_enable', request_method='GET')
 def enable_node(request):
+    """Enables/Disables a node."""
     if authenticated_userid(request) is None:
         raise Forbidden()
     # load existing
@@ -200,6 +206,7 @@ def enable_node(request):
 
 @view_config(route_name='node_test', request_method='GET', renderer='string')
 def test_node(request):
+    """Runs an SSH call on a node."""
     if authenticated_userid(request) is None:
         raise Forbidden()
     # trying an ssh connection
@@ -231,6 +238,7 @@ def test_node(request):
 
 @view_config(route_name='node', request_method='GET')
 def get_or_del_node(request):
+    """Gets or Deletes a node."""
     name = request.matchdict['name']
     queue = request.registry['queue']
 
@@ -245,7 +253,7 @@ def get_or_del_node(request):
 
 @view_config(route_name='nodes', request_method='POST')
 def add_node(request):
-    """Adds a run into Marteau"""
+    """Adds a new into Marteau"""
     owner = authenticated_userid(request)
     if owner is None:
         raise Forbidden()
@@ -274,6 +282,7 @@ def add_node(request):
 
 @view_config(route_name='report_file')
 def report_dir(request):
+    """Returns report files"""
     jobid = request.matchdict['jobid']
     filename = request.matchdict['filename']
     elmts = filename.split(os.sep)
@@ -287,17 +296,20 @@ def report_dir(request):
 
 @view_config(route_name='report_index')
 def report_index(request):
+    """Redirects / to /index.html"""
     jobid = request.matchdict['jobid']
     return HTTPFound(location='/report/%s/index.html' % jobid)
 
 
 @view_config(route_name='docs_index')
 def doc_index(request):
+    """Redirects / to /index.html"""
     return HTTPFound('/docs/index.html')
 
 
 @view_config(route_name='docs_file')
 def doc_dir(request):
+    """Returns Sphinx files"""
     filename = request.matchdict['file']
     elmts = filename.split(os.sep)
     for unsecure in ('.', '..'):
@@ -307,8 +319,10 @@ def doc_dir(request):
     path = os.path.join(DOCDIR, filename)
     return FileResponse(path, request)
 
+
 @view_config(route_name='sign')
 def sign(request):
+    """Initiates a Browser-ID challenge."""
     if authenticated_userid(request) is None:
         raise Forbidden()
     return HTTPFound(location='/')
@@ -316,6 +330,7 @@ def sign(request):
 
 @view_config(route_name='logout')
 def logout(request):
+    """Logs out."""
     headers = forget(request)
     request.session.flash("Logged out")
     return HTTPFound(location='/', headers=headers)
