@@ -55,15 +55,21 @@ def index(request):
 @view_config(route_name='purge', request_method='GET')
 def purge(request):
     """Adds a run into Marteau"""
+    if authenticated_userid(request) is None:
+        raise Forbidden()
     request.registry['queue'].purge()
-    return 'purged'
+    request.session.flash('Purged')
+    return HTTPFound('/')
 
 
 @view_config(route_name='reset', request_method='GET')
 def reset_nodes(request):
     """Adds a run into Marteau"""
+    if authenticated_userid(request) is None:
+        raise Forbidden()
     request.registry['queue'].reset_nodes()
-    return 'reset'
+    request.session.flash('Reset done.')
+    return HTTPFound('/')
 
 
 @view_config(route_name='test', request_method='GET')
@@ -159,14 +165,16 @@ def _get_result(request):
     return {'status': status,
             'console': console,
             'job': queue.get_job(jobid),
-            'time2str': time2str}
+            'time2str': time2str,
+            'user': authenticated_userid(request)}
 
 
 @view_config(route_name='nodes', request_method='GET',
              renderer='nodes.mako')
 def _nodes(request):
     queue = request.registry['queue']
-    return {'nodes': list(queue.get_nodes())}
+    return {'nodes': list(queue.get_nodes()),
+            'user': authenticated_userid(request)}
 
 
 @view_config(route_name='node_enable', request_method='GET')
