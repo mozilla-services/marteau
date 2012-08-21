@@ -164,10 +164,13 @@ def _get_result(request):
     else:
         status = status['msg']
 
+    report = status == 'Success'
+
     return {'status': status,
             'console': console,
             'job': queue.get_job(jobid),
             'time2str': time2str,
+            'report': report,
             'user': authenticated_userid(request)}
 
 
