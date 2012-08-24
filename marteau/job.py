@@ -10,7 +10,7 @@ from gevent.subprocess import Popen, PIPE
 
 from marteau import __version__, logger
 from marteau.queue import Queue
-from marteau.config import read_config
+from marteau.config import read_yaml_config
 from marteau.redirector import Redirector
 from marteau.util import send_report, configure_logger, send_form
 
@@ -142,7 +142,7 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
             os.chdir(target)
 
     # now looking for the marteau config file in there
-    config = read_config(os.getcwd())
+    config = read_yaml_config(os.getcwd())
 
     wdir = config.get('wdir')
     if wdir is not None:

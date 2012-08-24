@@ -1,3 +1,4 @@
+import os
 import argparse
 import sys
 from ConfigParser import ConfigParser
@@ -6,6 +7,7 @@ from wsgiref.simple_server import make_server
 from marteau import __version__, logger
 from marteau.web import main as webapp
 from marteau.util import LOG_LEVELS, configure_logger
+from marteau.config import Config
 
 
 def main():
@@ -31,7 +33,8 @@ def main():
     configure_logger(logger, args.loglevel, args.logoutput)
 
     # loading the config file
-    config = ConfigParser()
+    config = Config()
+
     if args.config is not None:
         logger.info('Loading %r' % args.config)
         config.read([args.config])
@@ -39,7 +42,7 @@ def main():
     # loading the app & the queue
     global_config = {}
     if config.has_section('marteau'):
-        settings = dict(config.items('marteau'))
+        settings = config.get_map('marteau')
     else:
         settings = {}
 
