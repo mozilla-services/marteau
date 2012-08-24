@@ -271,13 +271,11 @@ def add_node(request):
     return HTTPFound(location='/nodes')
 
 
-#@view_config('/media/<filename:path>')
-#def media_dir(filename):
-#    if filename == 'marteau.kar':
-#        kw = {'mimetype': 'audio/midi'}
-#    else:
-##        kw = {}
-#    return static_file(filename, root=MEDIADIR, **kw)
+@view_config(route_name='karaoke', request_method='GET')
+def karaoke_file(request):
+    filename = os.path.join(MEDIADIR, filename)
+    return FileResponse(filename,  content_type='audio/midi',
+                        content_encoding='UTF-8')
 
 
 @view_config(route_name='report_file')

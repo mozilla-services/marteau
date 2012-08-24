@@ -4,6 +4,10 @@ from pyramid_beaker import session_factory_from_settings
 
 
 def main(global_config, **settings):
+    # defaults
+    if 'mako.directories' not in settings:
+        settings['mako.directories'] = 'marteau:templates'
+
     session_factory = session_factory_from_settings(settings)
 
     # creating the config and the queue
@@ -31,6 +35,7 @@ def main(global_config, **settings):
     config.add_route('docs_index', '/docs')
 
     config.add_static_view('media', 'marteau:media/')
+    config.add_route('karaoke', '/media/marteau.kar')
 
     config.scan("marteau.web.views")
     return config.make_wsgi_app()
