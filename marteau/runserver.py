@@ -1,7 +1,5 @@
-import os
 import argparse
 import sys
-from ConfigParser import ConfigParser
 from wsgiref.simple_server import make_server
 
 from marteau import __version__, logger
