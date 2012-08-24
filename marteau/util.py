@@ -29,8 +29,8 @@ Marteau
 
 def send_report(rcpt, jobid=None, **options):
     subject = 'Your Marteau report'
-    root = options.get('root', DEFAULT_ROOT)
-    sender = options.get('smtp.sender', DEFAULT_SENDER)
+    root = options.get('report.root', DEFAULT_ROOT)
+    sender = options.get('report.sender', DEFAULT_SENDER)
     smtp_host = options.get('smtp.host', DEFAULT_SMTP_HOST)
     smtp_port = int(options.get('smtp.port', DEFAULT_SMTP_PORT))
     smtp_user = options.get('smtp.user')
