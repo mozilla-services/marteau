@@ -12,7 +12,7 @@ install_requires = ['funkload', 'pyramid',
                     'formencode',
                     'pyramid_beaker',
                     'pyramid_whoauth',
-                    'repoze.who.plugins.browserid'
+                    'repoze.who.plugins.browserid',
                     ]
 
 
@@ -58,7 +58,7 @@ setup(name='marteau',
         "License :: OSI Approved :: Apache Software License",
         "Development Status :: 1 - Planning"],
       install_requires=install_requires,
-      test_requires=['nose'],
+      test_requires=['nose', 'WebTest'],
       test_suite='nose.collector',
       entry_points="""
       [console_scripts]
