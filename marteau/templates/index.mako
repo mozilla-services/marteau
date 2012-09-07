@@ -70,7 +70,7 @@ C'mon, I need some boxes.
 <table>
 %for job in jobs:
 <tr>
-  <td>${job.metadata.get('repo', job.job_id)}created at ${time2str(job.metadata.get('created'))}</td>
+  <td>${job.metadata.get('repo', job.job_id)} created at ${time2str(job.metadata.get('created'))}</td>
   <td><a class="label" href="/test/${job.job_id}">Console</a></td>
 </tr>
 %endfor
@@ -102,7 +102,7 @@ I am bored !
 <table>
 %for job in failures:
 <tr>
-  <td>${job.metadata.get('repo', job.job_id)}</td>
+  <td>${job.metadata.get('repo', job.job_id)} ended at ${time2str(job.metadata.get('ended'))}</td>
   <td><a class="label" href="/test/${job.job_id}">Console</a></td>
   <td><a class="label" href="/test/${job.job_id}/delete">Delete</a></td>
   <td><a class="label" href="/test/${job.job_id}/replay">Replay</a></td>
@@ -121,7 +121,7 @@ None, congrats! &mdash; although that's suspicious.
 <table>
 %for job in successes:
 <tr>
-  <td>${job.metadata.get('repo', job.job_id)}</td>
+  <td>${job.metadata.get('repo', job.job_id)} ended at ${time2str(job.metadata.get('ended'))}</td>
   <td><a class="label" href="/test/${job.job_id}">Console</a></td>
   <td><a class="label" href="/report/${job.job_id}/index.html">Report</a></td>
   <td><a class="label" href="/test/${job.job_id}/delete">Delete</a></td>
