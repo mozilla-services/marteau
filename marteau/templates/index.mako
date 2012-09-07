@@ -7,31 +7,6 @@
 </div>
 
 
-<div id="workers" class="resource">
-<span>Workers</span>
-%for worker in workers:
-<div>PID : ${worker}</div>
-%endfor
-%if not workers:
-<div>
-Dude. No workers, no chocolate.
-</div>
-%endif
-</div>
-
-<div id="nodes" class="resource">
-<span>Nodes</span> <a href="/nodes">manage</a>
-%for node in nodes:
-<div>${node.name}</div>
-%endfor
-%if not nodes:
-<div>
-C'mon, I need some boxes.
-</div>
-%endif
-</div>
-
-
 <div id="form" class="resource">
 <form action="/test" method="POST">
  <input type="hidden" name="redirect_url" value="/"/>
@@ -60,6 +35,31 @@ C'mon, I need some boxes.
     <div><italic>*optional</italic></div>
 
 </form>
+</div>
+
+
+<div id="workers" class="resource">
+<span>Workers</span>
+%for worker in workers:
+<div>PID : ${worker}</div>
+%endfor
+%if not workers:
+<div>
+Dude. No workers, no chocolate.
+</div>
+%endif
+</div>
+
+<div id="nodes" class="resource">
+<span>Nodes</span> <a href="/nodes">manage</a>
+%for node in nodes:
+<div>${node.name}</div>
+%endfor
+%if not nodes:
+<div>
+C'mon, I need some boxes.
+</div>
+%endif
 </div>
 
 </div>
