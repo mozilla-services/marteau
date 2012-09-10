@@ -45,9 +45,10 @@ def main():
         settings = {}
 
     app = webapp(global_config, **settings)
-    logger.info('Hammer ready. Where are the nails ?')
     try:
         httpd = make_server(args.host, args.port, app)
+        logger.info('Hammer ready, at http://%s:%s. Where are the nails ?' %
+                    (args.host, args.port))
         httpd.serve_forever()
     except KeyboardInterrupt:
         sys.exit(0)
