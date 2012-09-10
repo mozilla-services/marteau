@@ -20,7 +20,7 @@ def main():
     parser.add_argument('--log-output', dest='logoutput', default='-',
             help="log output")
     parser.add_argument('--host', help='Host', default='0.0.0.0')
-    parser.add_argument('--port', help='port', default=8080)
+    parser.add_argument('--port', help='Port', type=int, default=8080)
     args = parser.parse_args()
 
     if args.version:
