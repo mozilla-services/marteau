@@ -39,11 +39,18 @@ class Queue(object):
         self._conn.srem('retools:nodes', name)
         self._conn.delete('retools:node:%s' % name)
 
-    def get_nodes(self):
+    def get_nodes(self, check_available=False):
         names = self._conn.smembers('retools:nodes')
+        nodes = []
+
         for name in sorted(names):
             node = self._conn.get('retools:node:%s' % name)
-            yield Node(**json.loads(node))
+            node = Node(**json.loads(node))
+            if check_available and (node.status != 'idle' or not node.enabled):
+                continue
+            nodes.append(node)
+
+        return nodes
 
     def reset_nodes(self):
         for node in self.get_nodes():
@@ -254,7 +261,6 @@ def save_job(job):
 def failure(job=None, exc=None):
     # depending on the failure we might requeue it with a
     # delay, using job.enqueue()
-    # XXX
     pl = job.redis.pipeline()
     job.metadata['ended'] = time.time()
     save_job(job)
@@ -262,9 +268,10 @@ def failure(job=None, exc=None):
     console_key = 'retools:jobconsole:%s' % job.job_id
     current = job.redis.get(console_key)
     if current is not None:
-        data = current + str(exc)
+        data = current + str(exc) + '\n'
+
     else:
-        data = str(exc)
+        data = str(exc) + '\n'
     pl.set(console_key, data)
     pl.srem('retools:started', job.job_id)
     pl.delete('retools:jobpid:%s' % str(os.getpid()))
@@ -283,5 +290,8 @@ def failure(job=None, exc=None):
             if node.name not in names:
                 job.redis.sadd('retools:nodes', node.name)
             job.redis.set('retools:node:%s' % node.name, node.to_json())
+
+    if 'enough free nodes' in str(exc):
+        job.enqueue()
 
     pl.execute()

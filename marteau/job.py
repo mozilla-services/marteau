@@ -5,6 +5,7 @@ import sys
 import argparse
 import logging
 import tempfile
+import time
 
 from gevent.subprocess import Popen, PIPE
 
@@ -127,6 +128,7 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
     if os.path.exists(repo):
         # just a local dir, lets work there
         os.chdir(repo)
+        _logrun('Moved to %r' % repo)
         target = os.path.realpath(repo)
     else:
         # checking out the repo
@@ -135,8 +137,10 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
         target = os.path.join(workdir, name)
         if os.path.exists(target):
             os.chdir(target)
+            _logrun('Moved to %r' % target)
             run_func(queue, job_id, 'git pull')
         else:
+            _logrun('Moved to %r' % workdir)
             run_func(queue, job_id,
                      'git clone %s' % repo, stop_on_failure=False)
             os.chdir(target)
@@ -149,14 +153,7 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
         target = os.path.join(target, wdir)
         os.chdir(target)
 
-    # creating a virtualenv there
-    run_func(queue, job_id, 'virtualenv --no-site-packages .')
-    run_func(queue, job_id, run_pip + ' install funkload')
-
-    # install dependencies if any
     deps = config.get('deps', [])
-    for dep in deps:
-        run_func(queue, job_id, run_pip + ' install %s' % dep)
 
     if distributed:
         # is this a distributed test ?
@@ -164,11 +161,12 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
             nodes_count = config.get('nodes', 1)
 
         # we want to pick up the number of nodes asked
-        nodes = [node for node in queue.get_nodes()
-                 if node.status == 'idle' and node.enabled]
+        nodes = queue.get_nodes(check_available=True)
 
         if len(nodes) < nodes_count:
-            # XXX we want to pile this one back !
+            # we want to pile this one back and sleep a bit here
+            _logrun('Sleeping for 30 s.')
+            time.sleep(30)
             raise ValueError("Sorry could not find enough free nodes")
 
         # then pick random ones
@@ -191,6 +189,14 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
         cmd += ' --distributed-log-path=%s' % target
     else:
         cmd = run_bench
+
+    # creating a virtualenv there
+    run_func(queue, job_id, 'virtualenv --no-site-packages .')
+    run_func(queue, job_id, run_pip + ' install funkload')
+
+    # install dependencies if any
+    for dep in deps:
+        run_func(queue, job_id, run_pip + ' install %s' % dep)
 
     xml_files = os.path.join(target, '*.xml')
 

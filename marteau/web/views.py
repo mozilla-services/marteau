@@ -102,7 +102,6 @@ def add_run(request):
     nodes = data.get('nodes')
     metadata = {'created': time.time(),
                 'repo': repo}
-
     queue = request.registry['queue']
 
     try:
