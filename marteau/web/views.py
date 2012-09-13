@@ -272,7 +272,7 @@ def add_node(request):
 
 @view_config(route_name='karaoke', request_method='GET')
 def karaoke_file(request):
-    filename = os.path.join(MEDIADIR, filename)
+    filename = os.path.join(MEDIADIR, 'marteau.kar')
     return FileResponse(filename,  content_type='audio/midi',
                         content_encoding='UTF-8')
 
