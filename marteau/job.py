@@ -184,7 +184,7 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
         workers = '--distribute-workers=%s' % workers
         cmd = '%s --distribute %s' % (run_bench, workers)
         if deps != []:
-            cmd += ' --distributed-packages=%s' % ' '.join(deps)
+            cmd += ' --distributed-packages="%s"' % ' '.join(deps)
         target = tempfile.mkdtemp()
         cmd += ' --distributed-log-path=%s' % target
     else:
