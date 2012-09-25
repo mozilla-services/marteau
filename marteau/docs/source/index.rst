@@ -103,7 +103,20 @@ Run it on a Marteau server
 Once you are happy with your test, you can send it to a Marteau server via
 the command line, using the **--server** option.
 
-Let's say Marteau is running on **http://marteau.example.com**. You'd do::
+The first thing to do is to get an API key on the target Marteau server.
+
+Let's say Marteau is running on **http://marteau.example.com**.
+
+Visit **http://marteau.example.com/profile** with your Browser-ID login,
+then hit the *Generate key* button.
+
+You will geta a user and secret key - you will need to set in your environment
+prior to running the script::
+
+    $ export MACAUTH_USER=tarek@mozilla.com
+    $ export MACAUTH_SECRET=eab6e5f09faec33...933d0a0e4c082fa74bc1e7a
+
+Then you can run the script to add jobs in Marteau::
 
     $ bin/marteau https://github.com/mozilla-services/tokenserver --server http://marteau.example.com
     2012-08-16 14:21:22 [48118] [INFO] Sending the job to the Marteau server
