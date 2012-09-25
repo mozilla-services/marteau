@@ -1,4 +1,8 @@
+import os
+import json
+import hashlib
 import urllib
+from base64 import urlsafe_b64decode as b64decode
 import urllib2
 import fcntl
 import socket
@@ -122,6 +126,26 @@ def send_form(url, params):
     return res
 
 
-def generate_key(user, secret):
-    token = tokenlib.make_token({"user": user}, secret=secret)
-    return tokenlib.get_token_secret(token, secret=secret)
+def generate_key():
+    return os.urandom(32).encode('hex')
+
+
+def decode_mac_id(request, tokenid):
+    queue = request.registry['queue']
+
+    # extracting the user
+    try:
+        decoded_token = b64decode(tokenid)
+    except TypeError, e:
+        raise ValueError(str(e))
+    payload = decoded_token[:-hashlib.sha1().digest_size]
+    data = json.loads(payload)
+    user = data['user']
+
+    # getting the associated secret
+    secret = queue.get_key(user)
+
+    # now we can parse the token and make sure we're good
+    tsecret = tokenlib.get_token_secret(tokenid, secret=secret)
+    data = tokenlib.parse_token(tokenid, secret=secret)
+    return user, tsecret

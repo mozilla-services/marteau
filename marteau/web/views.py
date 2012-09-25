@@ -20,7 +20,6 @@ from marteau.job import reportsdir
 from marteau.node import Node
 from marteau.web.schemas import JobSchema, NodeSchema
 import marteau
-import tokenlib
 from marteau.util import generate_key
 
 
@@ -64,7 +63,7 @@ def profile(request):
         key = None
     else:
         if 'generate' in request.POST:
-            key = generate_key(user, secret)
+            key = generate_key()
             queue.set_key(user, key)
         else:
             key = queue.get_key(user)
@@ -98,7 +97,7 @@ def get_all_jobs(request):
     return request.registry['queue'].get_jobs()
 
 
-@view_config(route_name='test', request_method='POST')
+@view_config(route_name='test', request_method='POST', renderer='json')
 def add_run(request):
     """Adds a run into Marteau"""
     owner = authenticated_userid(request)
@@ -135,10 +134,10 @@ def add_run(request):
                            metadata=metadata, email=owner,
                            options=options)
 
-    if redirect_url is not None:
+    if redirect_url is not None and 'api_call' not in request.POST:
         return HTTPFound(location=redirect_url)
 
-    return job_id
+    return {'job_id': job_id}
 
 
 @view_config(route_name='cancel', request_method='GET')

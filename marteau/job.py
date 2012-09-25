@@ -14,7 +14,7 @@ from marteau import __version__, logger
 from marteau.queue import Queue
 from marteau.config import read_yaml_config
 from marteau.redirector import Redirector
-from marteau.util import send_report, configure_logger, send_form
+from marteau.util import send_report, configure_logger
 
 from macauthlib import sign_request
 from webob import Request
@@ -250,16 +250,20 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
     return report_dir
 
 
-def send_job(repo, server):
+def send_job(repo, server, cycles='', duration='', nodes='', redirect_url=''):
     mac_user = os.environ.get('MACAUTH_USER')
     mac_secret = os.environ.get('MACAUTH_SECRET')
     request = Request.blank(server.rstrip('/') + '/test')
     request.method = 'POST'
-    data = {'repo': repo}
-    request.body = urllib.urlencode(data)
+    params = {'repo': repo, 'cycles': cycles, 'duration': duration,
+              'nodes': nodes, 'redirect_url': redirect_url,
+              'api_call': 1}
+
+    request.body = urllib.urlencode(params)
+    request.environ['CONTENT_TYPE'] = 'application/x-www-form-urlencoded'
 
     if mac_user is not None:
-        tokenid = tokenlib.make_token({"id": mac_user}, secret=mac_secret)
+        tokenid = tokenlib.make_token({"user": mac_user}, secret=mac_secret)
         key = tokenlib.get_token_secret(tokenid, secret=mac_secret)
         sign_request(request, tokenid, key)
 
@@ -267,7 +271,8 @@ def send_job(repo, server):
     if resp.status_int == 401:
         raise ValueError("Authorization Failed!")
 
-    return server.rstrip('/') + '/test/' + resp.body
+    job_id = resp.json['job_id']
+    return server.rstrip('/') + '/test/' + job_id
 
 
 def main():

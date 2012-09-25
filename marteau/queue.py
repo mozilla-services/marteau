@@ -220,7 +220,7 @@ class Queue(object):
         return self._conn.get('retools:apikey:%s' % user)
 
     def set_key(self, user, key):
-       return self._conn.set('retools:apikey:%s' % user, key)
+        return self._conn.set('retools:apikey:%s' % user, key)
 
 
 #
