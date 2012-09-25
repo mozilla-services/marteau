@@ -21,6 +21,7 @@ from marteau.node import Node
 from marteau.web.schemas import JobSchema, NodeSchema
 import marteau
 import tokenlib
+from marteau.util import generate_key
 
 
 TOPDIR = os.path.dirname(marteau.__file__)
@@ -63,9 +64,7 @@ def profile(request):
         key = None
     else:
         if 'generate' in request.POST:
-            secret = request.registry.settings['macsecret']
-            token = tokenlib.make_token({"user": user}, secret=secret)
-            key = tokenlib.get_token_secret(token, secret=secret)
+            key = generate_key(user, secret)
             queue.set_key(user, key)
         else:
             key = queue.get_key(user)

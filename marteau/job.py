@@ -259,8 +259,9 @@ def send_job(repo, server):
     request.body = urllib.urlencode(data)
 
     if mac_user is not None:
-        token = tokenlib.make_token({'id': mac_user}, secret=mac_secret)
-        sign_request(request, token, mac_secret)
+        tokenid = tokenlib.make_token({"id": mac_user}, secret=mac_secret)
+        key = tokenlib.get_token_secret(tokenid, secret=mac_secret)
+        sign_request(request, tokenid, key)
 
     resp = request.get_response(proxy_exact_request)
     if resp.status_int == 401:

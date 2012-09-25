@@ -8,6 +8,7 @@ from rfc822 import AddressList
 import logging
 import smtplib
 
+import tokenlib
 from circus import logger
 
 DEFAULT_ROOT = 'http://localhost'
@@ -119,3 +120,8 @@ def send_form(url, params):
     request = urllib2.Request(url, params)
     res = urllib2.urlopen(request).read()
     return res
+
+
+def generate_key(user, secret):
+    token = tokenlib.make_token({"user": user}, secret=secret)
+    return tokenlib.get_token_secret(token, secret=secret)
