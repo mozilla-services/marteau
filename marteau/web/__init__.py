@@ -16,6 +16,7 @@ def main(global_config, **settings):
 
     # routing
     config.add_route('index', '/')
+    config.add_route('profile', '/profile')
     config.add_route('sign', '/sign')
     config.add_route('logout', '/logout')
     config.add_route('purge', '/purge')

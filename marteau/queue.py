@@ -216,6 +216,12 @@ class Queue(object):
 
         self.delete_pids(job_id)
 
+    def get_key(self, user):
+        return self._conn.get('retools:apikey:%s' % user)
+
+    def set_key(self, user, key):
+       return self._conn.set('retools:apikey:%s' % user, key)
+
 
 #
 # Events

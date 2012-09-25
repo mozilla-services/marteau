@@ -15,7 +15,7 @@
         <a href="/media/marteau.kar">don't</a>
       <div class="login">
         %if user:
-        Hi ${user}. <a href="/logout">Logout.</a>
+        Hi <a href="/profile">${user}</a>. <a href="/logout">Logout.</a>
         %endif
         %if not user:
         <a href="/sign"><img src="/media/sign_in_blue.png"/></a>

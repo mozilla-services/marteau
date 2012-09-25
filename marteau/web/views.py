@@ -53,6 +53,23 @@ def index(request):
             'user': authenticated_userid(request)}
 
 
+@view_config(route_name='profile', request_method=('GET', 'POST'), renderer='profile.mako')
+def profile(request):
+    """Profile page."""
+    queue = request.registry['queue']
+    user = authenticated_userid(request)
+    if user is None:
+        key = None
+    else:
+        if 'generate' in request.POST:
+            key = os.urandom(64).encode('hex')
+            queue.set_key(user, key)
+        else:
+            key = queue.get_key(user)
+
+    return {'user': user, 'key': key}
+
+
 @view_config(route_name='purge', request_method='GET')
 def purge(request):
     """Purges all queues in Redis"""
