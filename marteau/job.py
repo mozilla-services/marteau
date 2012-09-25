@@ -6,6 +6,7 @@ import argparse
 import logging
 import tempfile
 import time
+import urllib
 
 from gevent.subprocess import Popen, PIPE
 
@@ -14,6 +15,11 @@ from marteau.queue import Queue
 from marteau.config import read_yaml_config
 from marteau.redirector import Redirector
 from marteau.util import send_report, configure_logger, send_form
+
+from macauthlib import sign_request
+from webob import Request
+from wsgiproxy.exactproxy import proxy_exact_request
+import tokenlib
 
 
 workdir = '/tmp'
@@ -245,10 +251,22 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
 
 
 def send_job(repo, server):
-    url = server.rstrip('/') + '/test'
+    mac_user = os.environ.get('MACAUTH_USER')
+    mac_secret = os.environ.get('MACAUTH_SECRET')
+    request = Request.blank(server.rstrip('/') + '/test')
+    request.method = 'POST'
     data = {'repo': repo}
-    res = send_form(url, data)
-    return server.rstrip('/') + '/test/' + res
+    request.body = urllib.urlencode(data)
+
+    if mac_user is not None:
+        token = tokenlib.make_token({'id': mac_user}, secret=mac_secret)
+        sign_request(request, token, mac_secret)
+
+    resp = request.get_response(proxy_exact_request)
+    if resp.status_int == 401:
+        raise ValueError("Authorization Failed!")
+
+    return server.rstrip('/') + '/test/' + resp.body
 
 
 def main():

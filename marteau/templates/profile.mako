@@ -6,12 +6,12 @@
 
 %if user:
 
-   <h2>Oauth Key</h2>
+   <h2>MACAuth Key</h2>
    %if key:
-   <div>Identity
+   <div>MACAUTH_USER
     <pre>${user}</pre>
     </div>
-    <div>Secret
+    <div>MACAUTH_SECRET
     <pre>${key}</pre>
     </div>
   <form method="POST">

@@ -20,6 +20,7 @@ from marteau.job import reportsdir
 from marteau.node import Node
 from marteau.web.schemas import JobSchema, NodeSchema
 import marteau
+import tokenlib
 
 
 TOPDIR = os.path.dirname(marteau.__file__)
@@ -62,7 +63,9 @@ def profile(request):
         key = None
     else:
         if 'generate' in request.POST:
-            key = os.urandom(64).encode('hex')
+            secret = request.registry.settings['macsecret']
+            token = tokenlib.make_token({"user": user}, secret=secret)
+            key = tokenlib.get_token_secret(token, secret=secret)
             queue.set_key(user, key)
         else:
             key = queue.get_key(user)
