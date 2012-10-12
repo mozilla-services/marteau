@@ -308,21 +308,21 @@ def main():
 
     if args.server and os.path.exists(args.repo):
         logging.error("You can't run on a server and provide a local dir!")
-        sys.exit(0)
+        sys.exit(1)
 
     if args.server:
         logger.info('Sending the job to the Marteau server')
         test = send_job(args.repo, args.server)
         logger.info('Test added at %r' % test)
         logger.info('Bye!')
-        sys.exit(1)
+        sys.exit(0)
     else:
         logger.info('Hammer ready. Where are the nails ?')
         try:
             res = run_loadtest(args.repo, distributed=args.distributed)
             logger.info('Report generated at %r' % res)
         except KeyboardInterrupt:
-            sys.exit(0)
+            sys.exit(1)
         finally:
             logger.info('Bye!')
 
