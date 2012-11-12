@@ -9,8 +9,8 @@ from marteau.node import Node
 
 class Queue(object):
 
-    def __init__(self):
-        self._qm = QueueManager()
+    def __init__(self, redis=None):
+        self._qm = QueueManager(redis=redis)
         self._qm.subscriber('job_failure', handler='marteau.queue:failure')
         self._qm.subscriber('job_postrun', handler='marteau.queue:success')
         self._qm.subscriber('job_prerun', handler='marteau.queue:starting')
