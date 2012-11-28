@@ -1,0 +1,23 @@
+name: MarketPlace
+test: MarketplaceTest.test_marketplace
+script: loadtest.py
+xml: simple-bench.xml
+nodes: 9
+deps:
+    - gevent
+lookup:
+    - marteau.tests.register_fixtures
+fixtures:
+    memcache_delay:
+        class: FakeTestFixture
+        arguments:
+            server: memcache
+            behavior: delay
+    redis_blackout:
+        class: FakeTestFixture 
+        arguments:
+            server: redis
+            behavior: blackout
+vaurien-proxies:
+    memcache: http://memcache:0123
+    redis: http://redis:1234
