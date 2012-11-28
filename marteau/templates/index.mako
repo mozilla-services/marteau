@@ -14,25 +14,29 @@
  <span>Add a job</span>
 <table>
     <tr>
-      <td>Repo</td>
+      <td>Repo*</td>
       <td><input type="text" name="repo"/></td>
     </tr>
     <tr>
-      <td>Cycles*</td>
+      <td>Cycles</td>
       <td><input type="text" name="cycles"/></td>
     </tr>
     <tr>
-     <td>Duration*</td>
+     <td>Duration</td>
      <td><input type="text" name="duration"/></td>
     </tr>
     <tr>
-      <td>Nodes*</td>
+      <td>Nodes</td>
       <td><input type="text" name="nodes"/></td>
+    </tr>
+    <tr>
+      <td>Fixture</td>
+      <td><input type="text" name="fixture"/></td>
     </tr>
 
 </table>
     <input type="submit"/>
-    <div><italic>*optional</italic></div>
+    <div><italic>*required</italic></div>
 
 </form>
 </div>

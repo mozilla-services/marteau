@@ -2,6 +2,8 @@ from marteau import queue
 from pyramid.config import Configurator
 from pyramid_beaker import session_factory_from_settings
 from pyramid.authorization import ACLAuthorizationPolicy
+from pyramid.authentication import AuthTktAuthenticationPolicy
+
 
 def main(global_config, **settings):
     # defaults
@@ -14,8 +16,8 @@ def main(global_config, **settings):
     config = Configurator(settings=settings, session_factory=session_factory)
     config.registry['queue'] = queue.Queue()
 
-    authz_policy = ACLAuthorizationPolicy()
-    config.set_authorization_policy(authz_policy)
+    config.set_authorization_policy(ACLAuthorizationPolicy())
+    config.set_authentication_policy(AuthTktAuthenticationPolicy('teskjskljf'))
 
     # routing
     config.add_route('index', '/')
