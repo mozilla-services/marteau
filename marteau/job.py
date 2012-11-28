@@ -124,7 +124,7 @@ def cleanup(func):
 @cleanup
 def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
                  email=None, options=None, distributed=True,
-                 queue=None):
+                 queue=None, fixture=None):
 
     job_id = os.environ.get('MARTEAU_JOBID', '')
 
@@ -160,7 +160,6 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
         os.chdir(target)
 
     deps = config.get('deps', [])
-
     if distributed:
         # is this a distributed test ?
         if nodes_count is None:
@@ -221,9 +220,21 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
     report_dir = os.path.join(reportsdir,
             os.environ.get('MARTEAU_JOBID', 'report'))
 
-    _logrun('Running the loadtest')
-    run_func(queue, job_id, '%s %s %s' % (cmd, config['script'],
-                                          config['test']))
+    config.lookup_modules()
+
+    if fixture is not None:
+        _logrun('running the fixture setUp method')
+        fixture = config.get_fixture(fixture)
+        fixture.setUp()
+
+    try:
+        _logrun('Running the loadtest')
+        run_func(queue, job_id, '%s %s %s' % (cmd, config['script'],
+                                              config['test']))
+    finally:
+        _logrun('running the fixture tearDown method')
+        if fixture is not None:
+            fixture.tearDown()
 
     _logrun('Building the report')
 
@@ -290,6 +301,8 @@ def main():
     parser.add_argument('--distributed', action='store_true',
                         default=False,
                         help='Run with the nodes')
+    parser.add_argument('--fixture', default=None,
+                        help='The fixture to use for this loadtest')
     parser.add_argument('--server', dest='server',
             default=None, help="Marteau Server to send the job to")
 
@@ -319,7 +332,8 @@ def main():
     else:
         logger.info('Hammer ready. Where are the nails ?')
         try:
-            res = run_loadtest(args.repo, distributed=args.distributed)
+            res = run_loadtest(args.repo, distributed=args.distributed,
+                               fixture=args.fixture)
             logger.info('Report generated at %r' % res)
         except KeyboardInterrupt:
             sys.exit(1)
