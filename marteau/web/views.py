@@ -54,7 +54,8 @@ def index(request):
             'user': authenticated_userid(request)}
 
 
-@view_config(route_name='profile', request_method=('GET', 'POST'), renderer='profile.mako')
+@view_config(route_name='profile', request_method=('GET', 'POST'),
+             renderer='profile.mako')
 def profile(request):
     """Profile page."""
     queue = request.registry['queue']
@@ -118,8 +119,8 @@ def add_run(request):
     cycles = data.get('cycles')
     duration = data.get('duration')
     nodes = data.get('nodes')
-    metadata = {'created': time.time(),
-                'repo': repo}
+    fixture = data.get('fixture', None)
+    metadata = {'created': time.time(), 'repo': repo}
     queue = request.registry['queue']
 
     try:
@@ -131,7 +132,7 @@ def add_run(request):
 
     job_id = queue.enqueue('marteau.job:run_loadtest', repo=repo,
                            cycles=cycles, nodes_count=nodes, duration=duration,
-                           metadata=metadata, email=owner,
+                           metadata=metadata, email=owner, fixture=fixture,
                            options=options)
 
     if redirect_url is not None and 'api_call' not in request.POST:
