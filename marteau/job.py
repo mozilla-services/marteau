@@ -325,8 +325,10 @@ def main():
     parser.add_argument('--distributed', action='store_true',
                         default=False,
                         help='Run with the nodes')
-    parser.add_argument('--fixture', default=None,
-                        help='The fixture to use for this loadtest')
+    parser.add_argument('--fixture-plugin', default=None,
+                        help='The fixture to use for this loadtest.')
+    parser.add_argument('--fixture-options', default=None,
+                        help='Options to pass to the fixture.')
     parser.add_argument('--server', dest='server',
                         default=None,
                         help="Marteau Server to send the job to")
@@ -358,7 +360,8 @@ def main():
         logger.info('Hammer ready. Where are the nails ?')
         try:
             res = run_loadtest(args.repo, distributed=args.distributed,
-                               fixture=args.fixture)
+                               fixture_plugin=args.fixture_plugin,
+                               fixture_options=args.fixture_options)
             logger.info('Report generated at %r' % res)
         except KeyboardInterrupt:
             sys.exit(1)
