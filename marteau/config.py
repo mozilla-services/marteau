@@ -11,6 +11,7 @@ https://wiki.mozilla.org/index.php?title=Services/Sync/Server/GlobalConfFile
 """
 import re
 import os
+from os.path import abspath, normpath, expandvars, expanduser
 import importlib
 from ConfigParser import RawConfigParser
 
@@ -176,12 +177,7 @@ def load_into_settings(filename, settings):
             config = Configurator(settings=settings)
 
     """
-    filename = os.path.abspath(
-                 os.path.normpath(
-                   os.path.expandvars(
-                     os.path.expanduser(
-                       filename))))
-
+    filename = abspath(normpath(expandvars(expanduser(filename))))
     config = Config(filename)
 
     # Put values from the config file into the pyramid settings dict.

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# flake8: noqa
 #
 # marteau documentation build configuration file, created by
 # sphinx-quickstart on Mon Aug 13 12:48:36 2012.

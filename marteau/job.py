@@ -218,7 +218,7 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
         cmd += ' --duration=%s' % duration
 
     report_dir = os.path.join(reportsdir,
-            os.environ.get('MARTEAU_JOBID', 'report'))
+                              os.environ.get('MARTEAU_JOBID', 'report'))
 
     config.lookup_modules()
 
@@ -291,20 +291,22 @@ def main():
     parser.add_argument('repo', help='Git repository or local directory',
                         nargs='?')
     parser.add_argument('--version', action='store_true',
-                     default=False, help='Displays Circus version and exits.')
+                        default=False,
+                        help='Displays Circus version and exits.')
     parser.add_argument('--log-level', dest='loglevel', default='info',
-            choices=LOG_LEVELS.keys() + [key.upper() for key in
-                LOG_LEVELS.keys()],
-            help="log level")
+                        choices=LOG_LEVELS.keys() + [key.upper() for key in
+                                                     LOG_LEVELS.keys()],
+                        help="log level")
     parser.add_argument('--log-output', dest='logoutput', default='-',
-            help="log output")
+                        help="log output")
     parser.add_argument('--distributed', action='store_true',
                         default=False,
                         help='Run with the nodes')
     parser.add_argument('--fixture', default=None,
                         help='The fixture to use for this loadtest')
     parser.add_argument('--server', dest='server',
-            default=None, help="Marteau Server to send the job to")
+                        default=None,
+                        help="Marteau Server to send the job to")
 
     args = parser.parse_args()
 
