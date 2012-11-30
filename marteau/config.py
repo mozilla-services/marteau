@@ -290,6 +290,7 @@ def get_configurator(global_config, **settings):
 
 class MarteauConfig(dict):
 
+    # XXX ????
     def lookup_modules(self):
         # we just want to lookup the modules, not return them.  that's to be
         # sure we're loading the plugins in the plugin system, if any.

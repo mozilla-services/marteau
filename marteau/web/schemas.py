@@ -25,7 +25,8 @@ class JobSchema(Schema):
     cycles = Cycles()
     duration = validators.Int()
     nodes = validators.Int()
-    fixture = validators.String()
+    fixture_plugin = validators.String()   # should look at list instead
+    fixture_options = validators.String()
     #email = validators.Email()
 
 

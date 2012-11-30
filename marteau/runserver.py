@@ -4,8 +4,9 @@ from wsgiref.simple_server import make_server
 
 from marteau import __version__, logger
 from marteau.web import main as webapp
-from marteau.util import LOG_LEVELS, configure_logger
+from marteau.util import LOG_LEVELS, configure_logger, import_string
 from marteau.config import Config
+from marteau.fixtures import get_fixtures
 
 
 def main():
@@ -44,6 +45,12 @@ def main():
         settings = config.get_map('marteau')
     else:
         settings = {}
+
+    # loading the fixtures plugins
+    for fixture in settings['fixtures']:
+        import_string(fixture)
+
+    logger.info('Loaded plugins: %s' % ', '.join(get_fixtures()))
 
     app = webapp(global_config, **settings)
     try:

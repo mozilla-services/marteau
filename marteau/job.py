@@ -14,7 +14,8 @@ from marteau import __version__, logger
 from marteau.queue import Queue
 from marteau.config import read_yaml_config
 from marteau.redirector import Redirector
-from marteau.util import send_report, configure_logger
+from marteau.util import send_report, configure_logger, import_string
+from marteau.fixtures import get_fixture
 
 from macauthlib import sign_request
 from webob import Request
@@ -124,7 +125,11 @@ def cleanup(func):
 @cleanup
 def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
                  email=None, options=None, distributed=True,
-                 queue=None, fixture=None):
+                 queue=None, fixture_plugin=None, fixture_options=None):
+
+    # loading the fixtures plugins
+    for fixture in options.get('fixtures', []):
+        import_string(fixture)
 
     job_id = os.environ.get('MARTEAU_JOBID', '')
 
@@ -220,21 +225,39 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
     report_dir = os.path.join(reportsdir,
                               os.environ.get('MARTEAU_JOBID', 'report'))
 
-    config.lookup_modules()
+    if fixture_plugin:
+        _logrun('Running the %r fixture' % fixture_plugin)
+        fixture_klass = get_fixture(fixture_plugin)
+        # XXX will do a better serialization work here later
+        if fixture_options is None:
+            fixture_options = {}
+        else:
+            options = fixture_options.split(',')
+            fixture_options = dict([option.split('=') for option in options])
+        try:
+            fixture = fixture_klass(**fixture_options)
+        except:
+            _logrun('Could not instanciate a fixture plugin instance')
+            raise
 
-    if fixture is not None:
-        _logrun('running the fixture setUp method')
-        fixture = config.get_fixture(fixture)
-        fixture.setUp()
+        try:
+            fixture.setup()
+        except:
+            _logrun('The fixture set up failed')
+            raise
 
     try:
         _logrun('Running the loadtest')
         run_func(queue, job_id, '%s %s %s' % (cmd, config['script'],
                                               config['test']))
     finally:
-        _logrun('running the fixture tearDown method')
-        if fixture is not None:
-            fixture.tearDown()
+        _logrun('Running the fixture tear_down method')
+        if fixture_plugin:
+            try:
+                fixture.tear_down()
+            except:
+                _logrun('The fixture tear down failed')
+                raise
 
     _logrun('Building the report')
 

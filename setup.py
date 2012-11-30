@@ -15,7 +15,8 @@ install_requires = ['funkload', 'pyramid',
                     'pyramid_beaker',
                     'pyramid_macauth',
                     'pyramid_multiauth',
-                    'wsgiproxy'
+                    'wsgiproxy',
+                    'vaurienclient'
                     ]
 
 

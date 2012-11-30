@@ -21,6 +21,7 @@ from marteau.node import Node
 from marteau.web.schemas import JobSchema, NodeSchema
 import marteau
 from marteau.util import generate_key
+from marteau.fixtures import get_fixtures
 
 
 TOPDIR = os.path.dirname(marteau.__file__)
@@ -41,6 +42,8 @@ def time2str(data):
 def index(request):
     """Index page."""
     queue = request.registry['queue']
+    fixtures = get_fixtures().items()
+    fixtures.sort()
 
     return {'jobs': queue.get_jobs(),
             'workers': queue.get_workers(),
@@ -51,7 +54,8 @@ def index(request):
             'running': queue.get_running_jobs(),
             'time2str': time2str,
             'messages': request.session.pop_flash(),
-            'user': authenticated_userid(request)}
+            'user': authenticated_userid(request),
+            'fixtures': fixtures}
 
 
 @view_config(route_name='profile', request_method=('GET', 'POST'),
@@ -119,7 +123,9 @@ def add_run(request):
     cycles = data.get('cycles')
     duration = data.get('duration')
     nodes = data.get('nodes')
-    fixture = data.get('fixture', None)
+    fixture_plugin = data.get('fixture_plugin')
+    fixture_options = data.get('fixture_options')
+
     metadata = {'created': time.time(), 'repo': repo}
     queue = request.registry['queue']
 
@@ -132,7 +138,9 @@ def add_run(request):
 
     job_id = queue.enqueue('marteau.job:run_loadtest', repo=repo,
                            cycles=cycles, nodes_count=nodes, duration=duration,
-                           metadata=metadata, email=owner, fixture=fixture,
+                           metadata=metadata, email=owner,
+                           fixture_plugin=fixture_plugin,
+                           fixture_options=fixture_options,
                            options=options)
 
     if redirect_url is not None and 'api_call' not in request.POST:

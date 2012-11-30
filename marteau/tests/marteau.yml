@@ -11,13 +11,10 @@ fixtures:
     memcache_delay:
         class: FakeTestFixture
         arguments:
-            server: memcache
+            server: http://memcache:0123
             behavior: delay
     redis_blackout:
-        class: FakeTestFixture 
+        class: FakeTestFixture
         arguments:
-            server: redis
+            server: http://redis:1234
             behavior: blackout
-vaurien-proxies:
-    memcache: http://memcache:0123
-    redis: http://redis:1234

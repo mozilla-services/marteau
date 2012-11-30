@@ -5,15 +5,19 @@ class MarteauFixture(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def __init__(self, **kwargs):
+    def get_name(self):
         return NotImplemented
 
     @abstractmethod
-    def setUp(self):
+    def get_arguments(self):
         return NotImplemented
 
     @abstractmethod
-    def tearDown(self):
+    def set_up(self):
+        return NotImplemented
+
+    @abstractmethod
+    def tear_down(self):
         return NotImplemented
 
     @classmethod
@@ -24,7 +28,7 @@ class MarteauFixture(object):
 
     @classmethod
     def get_fixtures(cls):
-        return dict([(getattr(klass, 'name', klass.__name__), klass)
+        return dict([(klass.get_name(), klass)
                      for klass in cls._abc_registry])
 
     @classmethod

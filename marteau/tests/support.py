@@ -11,10 +11,18 @@ class FakeTestFixture(object):
         cls.setup_called = False
         cls.teardown_called = False
 
-    def setUp(self):
+    @classmethod
+    def get_name(self):
+        return 'dummy'
+
+    @classmethod
+    def get_arguments(self):
+        return []
+
+    def set_up(self):
         self.cls.setup_called = True
 
-    def tearDown(self):
+    def tear_down(self):
         self.cls.teardown_called = True
 
     @classmethod

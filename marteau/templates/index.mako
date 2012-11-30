@@ -31,7 +31,23 @@
     </tr>
     <tr>
       <td>Fixture</td>
-      <td><input type="text" name="fixture"/></td>
+
+      <td>
+        <div>
+        <label for="fixture_plugin">Fixture Plugin</label>
+        <select id="fixture_plugin" name="fixture_plugin">
+        <option value="" selected>No fixture</option>
+        %for name, fixture in fixtures:
+          <option value="${name}">${fixture.get_name()}</option>
+        %endfor
+        </select>
+        </div>
+        <div>
+        <label for="fixture_options">Fixture Options</label>
+        <input type="text" name="fixture_options"></input>
+        </div>
+      </td>
+
     </tr>
 
 </table>
