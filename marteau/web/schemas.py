@@ -19,11 +19,12 @@ class JobSchema(Schema):
 
     filter_extra_fields = True
     allow_extra_fields = True
+    ignore_key_missing = True
 
     repo = validators.String(not_empty=True)
     redirect_url = validators.String()
     cycles = Cycles()
-    duration = validators.Int()
+    duration = validators.Int(optional=True)
     nodes = validators.Int()
     fixture_plugin = validators.String()   # should look at list instead
     fixture_options = validators.String()

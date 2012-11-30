@@ -66,16 +66,20 @@ class Config(RawConfigParser):
     def __init__(self, filename=None):
         RawConfigParser.__init__(self)
         if filename is None:
-            self.filename = None
+            self.filename = self.here_path = None
             return
 
         # let's read the file
         if isinstance(filename, basestring):
             self.filename = filename
             self.read(filename)
+            here_path = os.path.dirname(self.filename)
+            self.here_path = abspath(normpath(expandvars(
+                                     expanduser(here_path))))
         else:
             self.filename = None
             self.readfp(filename)
+            self.here_path = None
 
     def _read(self, fp, filename):
         # first pass
@@ -84,6 +88,10 @@ class Config(RawConfigParser):
         # XXX what about %(here)s when we have several files?
         if self.filename is None:
             self.filename = filename
+
+        here_path = os.path.dirname(self.filename)
+        self.here_path = abspath(normpath(expandvars(
+                                 expanduser(here_path))))
 
         # let's expand it now if needed
         defaults = self.defaults()
@@ -110,8 +118,8 @@ class Config(RawConfigParser):
     def _unserialize(self, value):
         """values are unserialized on every get"""
         if self.filename is not None:
-            here_path = os.path.dirname(self.filename)
-            value = value.replace("%(here)s", here_path)
+            value = value.replace("%(here)s", self.here_path)
+
         return convert(value)
 
     def get_map(self, section=None):
@@ -151,6 +159,7 @@ class Config(RawConfigParser):
         parser = RawConfigParser()
         parser.read([filename])
         here_path = os.path.dirname(filename)
+        here_path = abspath(normpath(expandvars(expanduser(here_path))))
         for section in parser.sections():
             if not self.has_section(section):
                 self.add_section(section)

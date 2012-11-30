@@ -36,6 +36,7 @@ def main(global_config, **settings):
     config.add_route('report_file', '/report/{jobid}/{filename:.*}')
     config.add_route('docs_file', '/docs/{file:.*}')
     config.add_route('docs_index', '/docs')
+    config.add_route('addjob', '/addjob')
 
     config.add_static_view('media', 'marteau:media/')
     config.add_route('karaoke', '/media/marteau.kar')

@@ -16,7 +16,6 @@ from pyramid.exceptions import Forbidden
 from mako.lookup import TemplateLookup
 import paramiko
 
-from marteau.job import reportsdir
 from marteau.node import Node
 from marteau.web.schemas import JobSchema, NodeSchema
 import marteau
@@ -102,6 +101,18 @@ def get_all_jobs(request):
     return request.registry['queue'].get_jobs()
 
 
+@view_config(route_name='addjob', request_method='GET',
+             renderer='addjob.mako')
+def add_job(request):
+    queue = request.registry['queue']
+    fixtures = get_fixtures().items()
+    fixtures.sort()
+    return {
+            'time2str': time2str,
+            'messages': request.session.pop_flash(),
+            'user': authenticated_userid(request),
+            'fixtures': fixtures}
+
 @view_config(route_name='test', request_method='POST', renderer='json')
 def add_run(request):
     """Adds a run into Marteau"""
@@ -141,7 +152,11 @@ def add_run(request):
                            metadata=metadata, email=owner,
                            fixture_plugin=fixture_plugin,
                            fixture_options=fixture_options,
-                           options=options)
+                           options=options,
+                           workdir=options.get('working_directory'),
+                           reportsdir=options.get('reports_directory'))
+
+    request.session.flash("Job %r added." % job_id)
 
     if redirect_url is not None and 'api_call' not in request.POST:
         return HTTPFound(location=redirect_url)
@@ -314,7 +329,8 @@ def report_dir(request):
         if unsecure in elmts:
             return HTTPNotFound()
 
-    path = os.path.join(reportsdir, jobid, filename)
+    reports = dict(request.registry.settings)['reports_directory']
+    path = os.path.join(reports, jobid, filename)
     if not os.path.exists(path):
         return HTTPNotFound()
     return FileResponse(path, request)

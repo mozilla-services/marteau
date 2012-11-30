@@ -12,47 +12,15 @@
  <input type="hidden" name="redirect_url" value="/"/>
 
  <span>Add a job</span>
-<table>
+ <a href="/addjob">More options</a>
+ <table>
     <tr>
-      <td>Repo*</td>
+      <td>Repo</td>
       <td><input type="text" name="repo"/></td>
     </tr>
-    <tr>
-      <td>Cycles</td>
-      <td><input type="text" name="cycles"/></td>
-    </tr>
-    <tr>
-     <td>Duration</td>
-     <td><input type="text" name="duration"/></td>
-    </tr>
-    <tr>
-      <td>Nodes</td>
-      <td><input type="text" name="nodes"/></td>
-    </tr>
-    <tr>
-      <td>Fixture</td>
-
-      <td>
-        <div>
-        <label for="fixture_plugin">Fixture Plugin</label>
-        <select id="fixture_plugin" name="fixture_plugin">
-        <option value="" selected>No fixture</option>
-        %for name, fixture in fixtures:
-          <option value="${name}">${fixture.get_name()}</option>
-        %endfor
-        </select>
-        </div>
-        <div>
-        <label for="fixture_options">Fixture Options</label>
-        <input type="text" name="fixture_options"></input>
-        </div>
-      </td>
-
-    </tr>
-
-</table>
+    </table>
     <input type="submit"/>
-    <div><italic>*required</italic></div>
+ </table>
 
 </form>
 </div>

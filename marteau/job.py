@@ -23,8 +23,8 @@ from wsgiproxy.exactproxy import proxy_exact_request
 import tokenlib
 
 
-workdir = '/tmp'
-reportsdir = '/tmp'
+DEFAULT_WORKDIR = '/tmp'
+DEFAULT_REPORTSDIR = '/tmp'
 
 
 LOG_LEVELS = {
@@ -125,8 +125,8 @@ def cleanup(func):
 @cleanup
 def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
                  email=None, options=None, distributed=True,
-                 queue=None, fixture_plugin=None, fixture_options=None):
-
+                 queue=None, fixture_plugin=None, fixture_options=None,
+                 workdir=DEFAULT_WORKDIR, reportsdir=DEFAULT_REPORTSDIR):
     # loading the fixtures plugins
     for fixture in options.get('fixtures', []):
         import_string(fixture)
