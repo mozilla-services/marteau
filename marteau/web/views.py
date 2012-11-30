@@ -307,6 +307,8 @@ def report_dir(request):
             return HTTPNotFound()
 
     path = os.path.join(reportsdir, jobid, filename)
+    if not os.path.exists(path):
+        return HTTPNotFound()
     return FileResponse(path, request)
 
 
