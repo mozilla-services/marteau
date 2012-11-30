@@ -16,9 +16,6 @@ def main(global_config, **settings):
     config = Configurator(settings=settings, session_factory=session_factory)
     config.registry['queue'] = queue.Queue()
 
-    config.set_authorization_policy(ACLAuthorizationPolicy())
-    config.set_authentication_policy(AuthTktAuthenticationPolicy('teskjskljf'))
-
     # routing
     config.add_route('index', '/')
     config.add_route('profile', '/profile')
