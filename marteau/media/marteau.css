@@ -238,7 +238,7 @@ form.job fieldset
 {
   position: relative;
   margin-top: 15px;
-  margin: 0 0 1em 1em;  
+  margin: 0 0 1em 0;  
   padding-top: 20px;
   width: 93%;
   border: 1px solid gray;
@@ -247,7 +247,8 @@ form.job fieldset
 
 form.job fieldset legend 
 {
-  font-size: 140%
+  font-size: 140%;
+  font-weight: bold;
 }
 
 form.job fieldset ol 
@@ -262,23 +263,20 @@ form.job fieldset li
     padding-bottom: .7em;
 }
 
-form.job fieldset ol li label 
-{  
-    float: left;
-    width: 10em;        
-    margin-right: 1em;
+form.job fieldset ol li label {
+  float: left;
+  width: 10em;
+  margin-right: 1em;
+  font-size: 130%
 }
 
 input.button
 {
-    /* border-style: none; */
-    width: 6em;
-    height: 2.5em;
+  height: 2.5em;
 }
 
 div.buttonsContainer
 {
-    float: right;
-    margin: 1em 1em 1em 0;
+    float: left;
 }
 
