@@ -2,7 +2,6 @@ import os
 from setuptools import setup, find_packages
 from marteau import __version__
 
-
 install_requires = ['funkload', 'pyramid',
                     'gevent>=1.0dev',
                     'circus', 'PyYAML', 'paramiko',
@@ -19,6 +18,11 @@ install_requires = ['funkload', 'pyramid',
                     'vaurienclient'
                     ]
 
+
+try:
+    import importlib
+except ImportError:
+    install_requires.append('importlib')
 
 DOCS = os.path.join(os.path.dirname(__file__), 'marteau', 'docs', 'source')
 BUILD = os.path.join(os.path.dirname(__file__), 'marteau', 'docs', 'build')
