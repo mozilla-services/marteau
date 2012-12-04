@@ -20,7 +20,7 @@ from marteau.node import Node
 from marteau.web.schemas import JobSchema, NodeSchema
 import marteau
 from marteau.util import generate_key
-from marteau.fixtures import get_fixtures
+from marteau.fixtures import get_fixtures, get_fixture
 
 
 TOPDIR = os.path.dirname(marteau.__file__)
@@ -376,3 +376,14 @@ def logout(request):
     headers = forget(request)
     request.session.flash("Logged out")
     return HTTPFound(location='/', headers=headers)
+
+
+@view_config(route_name='fixture_options', renderer='json',
+             request_method='GET')
+def fixture_options(request):
+    fixture = request.matchdict['fixture']
+    fixture = get_fixture(fixture)
+    # name, default
+    # XXX we'll see for the type later
+    options = [(option[0], option[-1]) for option in fixture.get_arguments()]
+    return dict(options)
