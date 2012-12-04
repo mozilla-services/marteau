@@ -127,6 +127,7 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
                  email=None, options=None, distributed=True,
                  queue=None, fixture_plugin=None, fixture_options=None,
                  workdir=DEFAULT_WORKDIR, reportsdir=DEFAULT_REPORTSDIR):
+
     # loading the fixtures plugins
     for fixture in options.get('fixtures', []):
         import_string(fixture)
@@ -167,7 +168,7 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
     deps = config.get('deps', [])
     if distributed:
         # is this a distributed test ?
-        if nodes_count is None:
+        if nodes_count in (None, ''): # XXX fix later
             nodes_count = config.get('nodes', 1)
 
         # we want to pick up the number of nodes asked
@@ -228,12 +229,8 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
     if fixture_plugin:
         _logrun('Running the %r fixture' % fixture_plugin)
         fixture_klass = get_fixture(fixture_plugin)
-        # XXX will do a better serialization work here later
         if fixture_options is None:
             fixture_options = {}
-        #else:
-        #    #options = fixture_options.split(',')
-        #    fixture_options = dict([option.split('=') for option in options])
         try:
             fixture = fixture_klass(**fixture_options)
         except:
