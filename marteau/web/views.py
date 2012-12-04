@@ -120,22 +120,27 @@ def add_run(request):
     if owner is None:
         raise Forbidden()
 
-    form = Form(request, schema=JobSchema)
+    #form = Form(request, schema=JobSchema)
 
-    if not form.validate():
-        items = form.errors.items()
-        msg = '%s for "%s"' % (items[0][1], items[0][0])
-        request.session.flash(msg)
-        return HTTPFound('/')
+    #if not form.validate():
+    #    items = form.errors.items()
+    #    msg = '%s for "%s"' % (items[0][1], items[0][0])
+    #    request.session.flash(msg)
+    #    return HTTPFound('/')
 
-    data = form.data
+    #data = form.data
+    data = request.POST
     repo = data.get('repo')
     redirect_url = data.get('redirect_url')
     cycles = data.get('cycles')
     duration = data.get('duration')
     nodes = data.get('nodes')
     fixture_plugin = data.get('fixture_plugin')
-    fixture_options = data.get('fixture_options')
+    fixture_options = {}
+
+    for key, value in request.POST.items():
+        if key.startswith('fixture_') and key != 'fixture_plugin':
+            fixture_options[key[len('fixture_'):]] = value
 
     metadata = {'created': time.time(), 'repo': repo}
     queue = request.registry['queue']
@@ -385,5 +390,9 @@ def fixture_options(request):
     fixture = get_fixture(fixture)
     # name, default
     # XXX we'll see for the type later
-    options = [(option[0], option[-1]) for option in fixture.get_arguments()]
-    return dict(options)
+    # name : description, default
+    options = []
+    for argument in fixture.get_arguments():
+        options.append({'name': argument[0], 'description': argument[3],
+                        'default': argument[2]})
+    return {'items': options}

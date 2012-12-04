@@ -231,9 +231,9 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
         # XXX will do a better serialization work here later
         if fixture_options is None:
             fixture_options = {}
-        else:
-            options = fixture_options.split(',')
-            fixture_options = dict([option.split('=') for option in options])
+        #else:
+        #    #options = fixture_options.split(',')
+        #    fixture_options = dict([option.split('=') for option in options])
         try:
             fixture = fixture_klass(**fixture_options)
         except:
