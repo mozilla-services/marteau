@@ -59,14 +59,13 @@ $(document).ready(function() {
   $("#fixture_plugin").change( function () {
     var selected = $("#fixture_plugin option:selected").val();
 
-   if (selected == "") {
-      $('#options li').each(function(index) {
-         if (this.id !== 'fixture') {
-           $(this).remove();
-         }
-      });
-    }
-    else {
+    $('#options li').each(function(index) {
+       if (this.id !== 'fixture') {
+         $(this).remove();
+       }
+    });
+
+    if (selected != "") {
       $.getJSON("fixture_options/" + selected, function(data) {
         $.each(data.items, function(i, item){
           $('#options').append('<li id="option-' + item.name + '">');
