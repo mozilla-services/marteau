@@ -4,6 +4,7 @@ import os
 import time
 import datetime
 from ConfigParser import NoSectionError
+import requests
 
 from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
@@ -15,6 +16,7 @@ from pyramid.exceptions import Forbidden
 
 from mako.lookup import TemplateLookup
 import paramiko
+import yaml
 
 from marteau.node import Node
 from marteau.web.schemas import JobSchema, NodeSchema
@@ -104,14 +106,13 @@ def get_all_jobs(request):
 @view_config(route_name='addjob', request_method='GET',
              renderer='addjob.mako')
 def add_job(request):
-    queue = request.registry['queue']
     fixtures = get_fixtures().items()
     fixtures.sort()
-    return {
-            'time2str': time2str,
+    return {'time2str': time2str,
             'messages': request.session.pop_flash(),
             'user': authenticated_userid(request),
             'fixtures': fixtures}
+
 
 @view_config(route_name='test', request_method='POST', renderer='json')
 def add_run(request):
@@ -135,6 +136,9 @@ def add_run(request):
     cycles = data.get('cycles')
     duration = data.get('duration')
     nodes = data.get('nodes')
+    test = data.get('test')
+    script = data.get('script')
+
     fixture_plugin = data.get('fixture_plugin')
     fixture_options = {}
 
@@ -155,6 +159,7 @@ def add_run(request):
     job_id = queue.enqueue('marteau.job:run_loadtest', repo=repo,
                            cycles=cycles, nodes_count=nodes, duration=duration,
                            metadata=metadata, email=owner,
+                           test=test, script=script,
                            fixture_plugin=fixture_plugin,
                            fixture_options=fixture_options,
                            options=options,
@@ -396,3 +401,22 @@ def fixture_options(request):
         options.append({'name': argument[0], 'description': argument[3],
                         'default': argument[2]})
     return {'items': options}
+
+
+_PATTERNS = ('https://raw.github.com/mozilla/%s/master/.marteau.yml',
+             'https://raw.github.com/mozilla-services/%s/master/.marteau.yml')
+
+
+@view_config(route_name='project_options', renderer='json',
+             request_method='GET')
+def project_options(request):
+    project = request.matchdict['project']
+    project = project.replace('github.com', 'raw.github.com').rstrip('/')
+    config = project + '/master/.marteau.yml'
+
+    res = requests.get(config)
+
+    if res.status_code == 200:
+        return yaml.load(res.content)
+
+    return {}

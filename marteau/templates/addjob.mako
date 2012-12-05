@@ -2,6 +2,7 @@
 
 <h2>Add a job</h2>
 <script src="/media/jquery.js"></script>
+<script src="/media/jquery.textchange.min.js"></script>
 
 <div id="form">
 <form action="/test" method="POST" class="job">
@@ -11,7 +12,7 @@
     <legend>Basic options</legend>
     <ol>
     <li>
-      <label for="repo">Repo*</label> <input type="text" name="repo"/>
+      <label for="repo">Repo*</label> <input type="text" name="repo" id="repo"/>
     </li>
     <li>
       <label for="cycles">Cycles</label>
@@ -23,8 +24,18 @@
     </li>
     <li>
       <label for="nodes">Nodes</label>
-      <input type="text" name="nodes"/>
+      <input type="text" name="nodes" id="nodes"/>
     </li>
+    <li>
+      <label for="script">Script</label>
+      <input type="text" name="script" id="script"/>
+    </li>
+    <li>
+      <label for="test">Test</label>
+      <input type="text" name="test" id="test"/>
+    </li>
+
+
     </ol>
 
     <div><italic>*required</italic></div>
@@ -78,6 +89,26 @@ $(document).ready(function() {
 
     }
    });
+
+   var timeout;
+
+   $('#repo').bind('textchange', function () {
+       clearTimeout(timeout);
+       timeout = setTimeout(function () {
+         var repo = $("#repo").val();
+         $.getJSON("project_options/" + repo, function(data) {
+            if (data.hasOwnProperty('nodes'))
+                $("#nodes").val(data.nodes);
+
+            if (data.hasOwnProperty('script'))
+                $("#script").val(data.script);
+
+            if (data.hasOwnProperty('test'))
+                $("#test").val(data.test);
+         });
+
+       }, 3000);
+    });
 
 });
 

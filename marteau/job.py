@@ -126,7 +126,8 @@ def cleanup(func):
 def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
                  email=None, options=None, distributed=True,
                  queue=None, fixture_plugin=None, fixture_options=None,
-                 workdir=DEFAULT_WORKDIR, reportsdir=DEFAULT_REPORTSDIR):
+                 workdir=DEFAULT_WORKDIR, reportsdir=DEFAULT_REPORTSDIR,
+                 test=None, script=None):
 
     # loading the fixtures plugins
     for fixture in options.get('fixtures', []):
@@ -168,7 +169,7 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
     deps = config.get('deps', [])
     if distributed:
         # is this a distributed test ?
-        if nodes_count in (None, ''): # XXX fix later
+        if nodes_count in (None, ''):    # XXX fix later
             nodes_count = config.get('nodes', 1)
 
         # we want to pick up the number of nodes asked
@@ -220,6 +221,12 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
     if duration is None:
         duration = config.get('duration')
 
+    if test is None:
+        test = config.get('test')
+
+    if script is None:
+        script = config.get('script')
+
     if duration is not None:
         cmd += ' --duration=%s' % duration
 
@@ -245,8 +252,7 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
 
     try:
         _logrun('Running the loadtest')
-        run_func(queue, job_id, '%s %s %s' % (cmd, config['script'],
-                                              config['test']))
+        run_func(queue, job_id, '%s %s %s' % (cmd, script, test))
     finally:
         _logrun('Running the fixture tear_down method')
         if fixture_plugin:

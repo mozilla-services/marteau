@@ -1,8 +1,6 @@
 from marteau import queue
 from pyramid.config import Configurator
 from pyramid_beaker import session_factory_from_settings
-from pyramid.authorization import ACLAuthorizationPolicy
-from pyramid.authentication import AuthTktAuthenticationPolicy
 
 
 def main(global_config, **settings):
@@ -38,6 +36,7 @@ def main(global_config, **settings):
     config.add_route('docs_index', '/docs')
     config.add_route('addjob', '/addjob')
     config.add_route('fixture_options', '/fixture_options/{fixture:.*}')
+    config.add_route('project_options', '/project_options/{project:.*}')
 
     config.add_static_view('media', 'marteau:media/')
     config.add_route('karaoke', '/media/marteau.kar')
