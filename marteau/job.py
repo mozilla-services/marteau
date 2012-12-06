@@ -171,6 +171,8 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
         # is this a distributed test ?
         if nodes_count in (None, ''):    # XXX fix later
             nodes_count = config.get('nodes', 1)
+        else:
+            nodes_count = int(nodes_count)
 
         # we want to pick up the number of nodes asked
         nodes = queue.get_nodes(check_available=True)
