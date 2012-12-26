@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 from marteau import __version__
 
 install_requires = ['funkload', 'pyramid',
-                    'gevent>=1.0dev',
+                    'gevent',
                     'circus', 'PyYAML', 'paramiko',
                     'Mako', 'retools',
                     'virtualenv', 'Sphinx',
