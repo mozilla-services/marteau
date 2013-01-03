@@ -129,6 +129,9 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
                  workdir=DEFAULT_WORKDIR, reportsdir=DEFAULT_REPORTSDIR,
                  test=None, script=None):
 
+    if options is None:
+        options = {}
+
     # loading the fixtures plugins
     for fixture in options.get('fixtures', []):
         import_string(fixture)
