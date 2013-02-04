@@ -315,4 +315,4 @@ class MarteauConfig(dict):
 def read_yaml_config(project_dir, filename='.marteau.yml'):
     config_file = os.path.join(project_dir, filename)
     with open(config_file) as f:
-        return MarteauConfig(yaml.load(f.read()))
+        return MarteauConfig(yaml.safe_load(f.read()))
