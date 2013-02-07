@@ -47,7 +47,7 @@ def main():
         settings = {}
 
     # loading the fixtures plugins
-    for fixture in settings['fixtures']:
+    for fixture in settings.get('fixtures', []):
         import_string(fixture)
 
     logger.info('Loaded plugins: %s' % ', '.join(get_fixtures()))
