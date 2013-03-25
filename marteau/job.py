@@ -125,9 +125,9 @@ def cleanup(func):
 @cleanup
 def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
                  email=None, options=None, distributed=True,
-                 queue=None, fixture_plugin=None, fixture_options=None,
-                 workdir=DEFAULT_WORKDIR, reportsdir=DEFAULT_REPORTSDIR,
-                 test=None, script=None):
+                 fl_result_path=None, queue=None, fixture_plugin=None,
+                 fixture_options=None, workdir=DEFAULT_WORKDIR,
+                 reportsdir=DEFAULT_REPORTSDIR, test=None, script=None):
 
     if options is None:
         options = {}
@@ -215,6 +215,9 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
     for dep in deps:
         run_func(queue, job_id, run_pip + ' install %s' % dep)
 
+    if fl_result_path is not None:
+        # in funkload this is a relative path
+        target = os.path.join(target, fl_result_path)
     xml_files = os.path.join(target, '*.xml')
 
     if cycles is None:
@@ -330,6 +333,8 @@ def main():
                         help="log level")
     parser.add_argument('--log-output', dest='logoutput', default='-',
                         help="log output")
+    parser.add_argument('--fl-result-path', dest='result_path', default=None,
+                        help="Output path of Funkload result xml files.")
     parser.add_argument('--distributed', action='store_true',
                         default=False,
                         help='Run with the nodes')
@@ -368,6 +373,7 @@ def main():
         logger.info('Hammer ready. Where are the nails ?')
         try:
             res = run_loadtest(args.repo, distributed=args.distributed,
+                               fl_result_path=args.result_path,
                                fixture_plugin=args.fixture_plugin,
                                fixture_options=args.fixture_options)
             logger.info('Report generated at %r' % res)
