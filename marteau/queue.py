@@ -7,9 +7,20 @@ from retools.queue import QueueManager, Worker, Job
 from marteau.node import Node
 
 
+def redis_available():
+    from redis import Redis, ConnectionError
+    connection = Redis()
+    try:
+        return connection.ping()
+    except ConnectionError:
+        return False
+
+
 class Queue(object):
 
     def __init__(self):
+        if not redis_available():
+            raise IOError('Marteau needs Redis to run.')
         self._qm = QueueManager()
         self._qm.subscriber('job_failure', handler='marteau.queue:failure')
         self._qm.subscriber('job_postrun', handler='marteau.queue:success')
