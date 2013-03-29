@@ -17,7 +17,7 @@
         <a href="/media/marteau.kar">don't</a>
       <div class="login">
         %if request.user:
-         Hi <a href="/profile">${user}</a>.
+         Hi <a href="/profile">${user}</a>. <span id='signout'>Logout</span>
         %else:
          ${request.persona_button}
         %endif
