@@ -1,6 +1,23 @@
-from marteau import queue
 from pyramid.config import Configurator
 from pyramid_beaker import session_factory_from_settings
+from pyramid.decorator import reify
+from pyramid.request import Request as BaseRequest
+from pyramid.security import authenticated_userid
+
+
+from marteau import queue
+
+
+class Request(BaseRequest):
+    """
+    Custom request class
+    """
+    @reify
+    def user(self):
+        """
+        Get the logged in user
+        """
+        return authenticated_userid(self)
 
 
 def main(global_config, **settings):
@@ -14,6 +31,9 @@ def main(global_config, **settings):
     config = Configurator(settings=settings, session_factory=session_factory)
     config.registry['queue'] = queue.Queue()
 
+    # Use our custom Request class
+    config.set_request_factory(Request)
+
     # Both of our chosen policies configure a "forbidden view" to handle
     # unauthenticated access.  We have to resolve this conflict by explicitly
     # picking which one we want to use.
@@ -22,8 +42,6 @@ def main(global_config, **settings):
     # routing
     config.add_route('index', '/')
     config.add_route('profile', '/profile')
-    config.add_route('sign', '/sign')
-    config.add_route('logout', '/logout')
     config.add_route('purge', '/purge')
     config.add_route('reset', '/reset')
     config.add_route('test', '/test')

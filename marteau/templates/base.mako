@@ -1,10 +1,12 @@
 <!doctype html>
 <html>
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <link href='/media/marteau.css' rel='stylesheet' type='text/css'/>
   <link rel="shortcut icon" href="/media/small-logo.png">
+  <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+  <script src="https://login.persona.org/include.js" type="text/javascript"></script>
+  <script type="text/javascript">${request.persona_js}</script>
   <title>Marteau</title>
 </head>
   <body>
@@ -14,12 +16,11 @@
         <span id="subtitle">Hammering your web services since 2012</span>
         <a href="/media/marteau.kar">don't</a>
       <div class="login">
-        %if user:
-        Hi <a href="/profile">${user}</a>. <a href="/logout">Logout.</a>
+        %if request.user:
+         Hi <a href="/profile">${user}</a>.
+        %else:
+         ${request.persona_button}
         %endif
-        %if not user:
-        <a href="/sign"><img src="/media/sign_in_blue.png"/></a>
-      %endif
       </div>
 
        %if messages:

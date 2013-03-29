@@ -80,7 +80,7 @@ def profile(request):
 @view_config(route_name='purge', request_method='GET')
 def purge(request):
     """Purges all queues in Redis"""
-    if authenticated_userid(request) is None:
+    if request.user is None:
         raise Forbidden()
     request.registry['queue'].purge()
     request.session.flash('Purged')
@@ -90,7 +90,7 @@ def purge(request):
 @view_config(route_name='reset', request_method='GET')
 def reset_nodes(request):
     """Resets the nodes state to idle."""
-    if authenticated_userid(request) is None:
+    if request.user is None:
         raise Forbidden()
     request.registry['queue'].reset_nodes()
     request.session.flash('Reset done.')
@@ -117,7 +117,7 @@ def add_job(request):
 @view_config(route_name='test', request_method='POST', renderer='json')
 def add_run(request):
     """Adds a run into Marteau"""
-    owner = authenticated_userid(request)
+    owner = request.user
     if owner is None:
         raise Forbidden()
 
@@ -177,7 +177,7 @@ def add_run(request):
 @view_config(route_name='cancel', request_method='GET')
 def _cancel_job(request):
     """Cancels a running Job."""
-    if authenticated_userid(request) is None:
+    if request.user is None:
         raise Forbidden()
     jobid = request.matchdict['jobid']
     queue = request.registry['queue']
@@ -189,7 +189,7 @@ def _cancel_job(request):
 @view_config(route_name='delete', request_method='GET')
 def _delete_job(request):
     """Deletes a job."""
-    if authenticated_userid(request) is None:
+    if request.user is None:
         raise Forbidden()
     jobid = request.matchdict['jobid']
     queue = request.registry['queue']
@@ -200,7 +200,7 @@ def _delete_job(request):
 @view_config(route_name='replay', request_method='GET')
 def _requeue_job(request):
     """Replay a job."""
-    if authenticated_userid(request) is None:
+    if request.user is None:
         raise Forbidden()
     jobid = request.matchdict['jobid']
     queue = request.registry['queue']
@@ -241,7 +241,7 @@ def _nodes(request):
 @view_config(route_name='node_enable', request_method='GET')
 def enable_node(request):
     """Enables/Disables a node."""
-    if authenticated_userid(request) is None:
+    if request.user is None:
         raise Forbidden()
     # load existing
     queue = request.registry['queue']
@@ -258,7 +258,7 @@ def enable_node(request):
 @view_config(route_name='node_test', request_method='GET', renderer='string')
 def test_node(request):
     """Runs an SSH call on a node."""
-    if authenticated_userid(request) is None:
+    if request.user is None:
         raise Forbidden()
     # trying an ssh connection
     connection = paramiko.client.SSHClient()
@@ -294,7 +294,7 @@ def get_or_del_node(request):
     queue = request.registry['queue']
 
     if 'delete' in request.params:
-        if authenticated_userid(request) is None:
+        if request.user is None:
             raise Forbidden()
         queue.delete_node(name)
         return HTTPFound(location='/nodes')
@@ -370,22 +370,6 @@ def doc_dir(request):
 
     path = os.path.join(DOCDIR, filename)
     return FileResponse(path, request)
-
-
-@view_config(route_name='sign')
-def sign(request):
-    """Initiates a Browser-ID challenge."""
-    if authenticated_userid(request) is None:
-        raise Forbidden()
-    return HTTPFound(location='/')
-
-
-@view_config(route_name='logout')
-def logout(request):
-    """Logs out."""
-    headers = forget(request)
-    request.session.flash("Logged out")
-    return HTTPFound(location='/', headers=headers)
 
 
 @view_config(route_name='fixture_options', renderer='json',
