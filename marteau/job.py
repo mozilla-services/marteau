@@ -326,7 +326,7 @@ def main():
                         nargs='?')
     parser.add_argument('--version', action='store_true',
                         default=False,
-                        help='Displays Circus version and exits.')
+                        help='Displays Marteau version and exits.')
     parser.add_argument('--log-level', dest='loglevel', default='info',
                         choices=LOG_LEVELS.keys() + [key.upper() for key in
                                                      LOG_LEVELS.keys()],

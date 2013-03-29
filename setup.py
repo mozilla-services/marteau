@@ -4,7 +4,7 @@ from marteau import __version__
 
 install_requires = ['funkload', 'pyramid',
                     'gevent',
-                    'circus', 'PyYAML', 'paramiko',
+                    'PyYAML', 'paramiko',
                     'Mako', 'retools',
                     'virtualenv', 'Sphinx',
                     'pyramid_simpleform',
