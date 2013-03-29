@@ -1,6 +1,6 @@
 import argparse
 import sys
-from wsgiref.simple_server import make_server
+from waitress.server import WSGIServer
 
 from marteau import __version__, logger
 from marteau.web import main as webapp
@@ -59,10 +59,10 @@ def main():
 
     app = webapp(global_config, **settings)
     try:
-        httpd = make_server(args.host, args.port, app)
+        httpd = WSGIServer(app, host=args.host, port=args.port)
         logger.info('Hammer ready, at http://%s:%s. Where are the nails ?' %
                     (args.host, args.port))
-        httpd.serve_forever()
+        httpd.run()
     except KeyboardInterrupt:
         sys.exit(0)
     finally:
