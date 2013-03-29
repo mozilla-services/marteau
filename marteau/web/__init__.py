@@ -14,6 +14,11 @@ def main(global_config, **settings):
     config = Configurator(settings=settings, session_factory=session_factory)
     config.registry['queue'] = queue.Queue()
 
+    # Both of our chosen policies configure a "forbidden view" to handle
+    # unauthenticated access.  We have to resolve this conflict by explicitly
+    # picking which one we want to use.
+    config.add_forbidden_view("pyramid_persona.views.forbidden")
+
     # routing
     config.add_route('index', '/')
     config.add_route('profile', '/profile')
