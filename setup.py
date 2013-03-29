@@ -2,8 +2,10 @@ import os
 from setuptools import setup, find_packages
 from marteau import __version__
 
+
 install_requires = ['funkload', 'pyramid',
                     'gevent',
+                    'gevent_subprocess',
                     'PyYAML', 'paramiko',
                     'Mako', 'retools',
                     'virtualenv', 'Sphinx',

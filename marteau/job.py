@@ -8,7 +8,11 @@ import tempfile
 import time
 import urllib
 
-from gevent.subprocess import Popen, PIPE
+try:
+    from gevent.subprocess import Popen, PIPE
+except ImportError:
+    from gevent_subprocess import Popen, PIPE
+
 
 from marteau import __version__, logger
 from marteau.queue import Queue
