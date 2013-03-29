@@ -4,16 +4,9 @@ import os
 import json
 
 from retools.queue import QueueManager, Worker, Job
+
 from marteau.node import Node
-
-
-def redis_available():
-    from redis import Redis, ConnectionError
-    connection = Redis()
-    try:
-        return connection.ping()
-    except ConnectionError:
-        return False
+from marteau.util import redis_available
 
 
 class Queue(object):

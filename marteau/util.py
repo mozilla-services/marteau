@@ -236,3 +236,12 @@ def import_string(import_name, silent=False):
     except ImportError, e:
         if not silent:
             raise ImportStringError(import_name, e), None, sys.exc_info()[2]
+
+
+def redis_available():
+    from redis import Redis, ConnectionError
+    connection = Redis()
+    try:
+        return connection.ping()
+    except ConnectionError:
+        return False
