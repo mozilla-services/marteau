@@ -254,6 +254,8 @@ def success(job=None, result=None):
         nodes = nodes.split(',')
         for name in nodes:
             data = job.redis.get('retools:node:%s' % name)
+            if data is None:
+                continue
             node = Node(**json.loads(data))
             node.status = 'idle'
             names = job.redis.smembers('retools:nodes')
