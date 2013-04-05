@@ -185,11 +185,10 @@ def get_nodes(nodes_count, queue, options):
 
     node_user = options.get('node_user')
     if node_user is not None:
-        nodes = ['%s@%s' % (node_user, node.name) for node in nodes]
-    else:
-        nodes = [node.name for node in nodes]
+        for node in nodes:
+            node.name = '%s@%s' % (node_user, node.name)
 
-    return ','.join(nodes)
+    return nodes
 
 
 
@@ -249,8 +248,9 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
             nodes_count = int(nodes_count)
 
         nodes = get_nodes(nodes_count, queue, options)
-        os.environ['MARTEAU_NODES'] = nodes
-        workers = '--distribute-workers=%s' % nodes
+        nodes_names = ','.join([node.name for node in nodes])
+        os.environ['MARTEAU_NODES'] = nodes_names
+        workers = '--distribute-workers=%s' % nodes_names
         cmd = '%s --distribute %s' % (run_bench, workers)
         if deps != []:
             cmd += ' --distributed-packages="%s"' % ' '.join(deps)
