@@ -18,7 +18,8 @@ install_requires = ['funkload', 'pyramid',
                     'wsgiproxy',
                     'vaurienclient',
                     'requests',
-                    'fabric'
+                    'fabric',
+                    'boto'
                     ]
 
 

@@ -20,6 +20,7 @@ from marteau.config import read_yaml_config
 from marteau.redirector import Redirector
 from marteau.util import send_report, configure_logger, import_string
 from marteau.fixtures import get_fixture
+from marteau.aws import AWSConnection
 
 from macauthlib import sign_request
 from webob import Request
@@ -125,6 +126,73 @@ def cleanup(func):
     return _cleanup
 
 
+_AWSCON = None
+
+
+def _get_aws(options):
+    global _AWSCON
+
+    if _AWSCON is None:
+        access_key = options['aws.access_key']
+        secret_key = options['aws.secret_key']
+        region = options.get('aws.region', 'us-west-2')
+        _AWSCON = AWSConnection(access_key, secret_key, region)
+
+    return _AWSCON
+
+
+def release_nodes(nodes, queue, options):
+    if options.get('aws', False):
+        _logrun('Releasing Nodes on AWS')
+        conn = _get_aws(options)
+        conn.terminate_nodes(nodes)
+    else:
+        for node in nodes:
+            node.status = 'working'
+            queue.save_node(node)
+
+
+def get_nodes(nodes_count, queue, options):
+    if options.get('aws', False):
+        key_name = options['aws.key_name']
+        image_id = options['aws.image_id']
+        instance_type = options.get('aws.instance_type', 't1.micro')
+        sec = options.get('security_groups', 'marteau')
+        conn = _get_aws(options)
+        _logrun('Provisioning Nodes on AWS')
+        nodes = conn.create_nodes(image_id, nodes_count, instance_type,
+                                  security_groups=[sec], key_name=key_name)
+        _logrun('Sleeping for 30 s.')
+        time.sleep(30.)
+    else:
+        # we want to pick up the number of nodes asked
+        nodes = queue.get_nodes(check_available=True)
+
+        if len(nodes) < nodes_count:
+            # we want to pile this one back and sleep a bit here
+            _logrun('Sleeping for 30 s.')
+            time.sleep(30)
+            raise ValueError("Sorry could not find enough free nodes")
+
+        # then pick random ones
+        random.shuffle(nodes)
+        nodes = nodes[:nodes_count]
+
+        # save the nodes status
+        for node in nodes:
+            node.status = 'working'
+            queue.save_node(node)
+
+    node_user = options.get('node_user')
+    if node_user is not None:
+        nodes = ['%s@%s' % (node_user, node.name) for node in nodes]
+    else:
+        nodes = [node.name for node in nodes]
+
+    return ','.join(nodes)
+
+
+
 @catch_std
 @cleanup
 def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
@@ -132,7 +200,6 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
                  fl_result_path=None, queue=None, fixture_plugin=None,
                  fixture_options=None, workdir=DEFAULT_WORKDIR,
                  reportsdir=DEFAULT_REPORTSDIR, test=None, script=None):
-
     if options is None:
         options = {}
 
@@ -181,122 +248,108 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
         else:
             nodes_count = int(nodes_count)
 
-        # we want to pick up the number of nodes asked
-        nodes = queue.get_nodes(check_available=True)
-
-        if len(nodes) < nodes_count:
-            # we want to pile this one back and sleep a bit here
-            _logrun('Sleeping for 30 s.')
-            time.sleep(30)
-            raise ValueError("Sorry could not find enough free nodes")
-
-        # then pick random ones
-        random.shuffle(nodes)
-        nodes = nodes[:nodes_count]
-
-        # save the nodes status
-        for node in nodes:
-            node.status = 'working'
-            queue.save_node(node)
-
-        workers = ','.join([node.name for node in nodes])
-        os.environ['MARTEAU_NODES'] = workers
-
-        workers = '--distribute-workers=%s' % workers
+        nodes = get_nodes(nodes_count, queue, options)
+        os.environ['MARTEAU_NODES'] = nodes
+        workers = '--distribute-workers=%s' % nodes
         cmd = '%s --distribute %s' % (run_bench, workers)
         if deps != []:
             cmd += ' --distributed-packages="%s"' % ' '.join(deps)
         target = tempfile.mkdtemp()
         cmd += ' --distributed-log-path=%s' % target
+        if 'ssh_key' in options:
+            cmd += ' --distributed-key-filename=%s' % options['ssh_key']
     else:
         cmd = run_bench
 
-    # creating a virtualenv there
-    run_func(queue, job_id, 'virtualenv --no-site-packages .')
-    run_func(queue, job_id, run_pip + ' install funkload')
-
-    # install dependencies if any
-    for dep in deps:
-        run_func(queue, job_id, run_pip + ' install %s' % dep)
-
-    if fl_result_path is not None:
-        # in funkload this is a relative path
-        target = os.path.join(target, fl_result_path)
-    xml_files = os.path.join(target, '*.xml')
-
-    if cycles is None:
-        cycles = config.get('cycles')
-
-    if cycles is not None:
-        cmd += ' --cycles=%s' % cycles
-
-    if duration is None:
-        duration = config.get('duration')
-
-    if test is None:
-        test = config.get('test')
-
-    if script is None:
-        script = config.get('script')
-
-    if duration is not None:
-        cmd += ' --duration=%s' % duration
-
-    report_dir = os.path.join(reportsdir,
-                              os.environ.get('MARTEAU_JOBID', 'report'))
-
-    if fixture_plugin:
-        _logrun('Running the %r fixture' % fixture_plugin)
-        fixture_klass = get_fixture(fixture_plugin)
-        if fixture_options is None:
-            fixture_options = {}
-        try:
-            fixture = fixture_klass(**fixture_options)
-        except:
-            _logrun('Could not instanciate a fixture plugin instance')
-            raise
-
-        try:
-            fixture.setup()
-        except:
-            _logrun('The fixture set up failed')
-            raise
-
     try:
-        _logrun('Running the loadtest')
-        run_func(queue, job_id, '%s %s %s' % (cmd, script, test))
-    finally:
-        _logrun('Running the fixture tear_down method')
+        # creating a virtualenv there
+        run_func(queue, job_id, 'virtualenv --no-site-packages .')
+        run_func(queue, job_id, run_pip + ' install funkload')
+
+        # install dependencies if any
+        for dep in deps:
+            run_func(queue, job_id, run_pip + ' install %s' % dep)
+
+        if fl_result_path is not None:
+            # in funkload this is a relative path
+            target = os.path.join(target, fl_result_path)
+        xml_files = os.path.join(target, '*.xml')
+
+        if cycles is None:
+            cycles = config.get('cycles')
+
+        if cycles is not None:
+            cmd += ' --cycles=%s' % cycles
+
+        if duration is None:
+            duration = config.get('duration')
+
+        if test is None:
+            test = config.get('test')
+
+        if script is None:
+            script = config.get('script')
+
+        if duration is not None:
+            cmd += ' --duration=%s' % duration
+
+        report_dir = os.path.join(reportsdir,
+                                os.environ.get('MARTEAU_JOBID', 'report'))
+
         if fixture_plugin:
+            _logrun('Running the %r fixture' % fixture_plugin)
+            fixture_klass = get_fixture(fixture_plugin)
+            if fixture_options is None:
+                fixture_options = {}
             try:
-                fixture.tear_down()
+                fixture = fixture_klass(**fixture_options)
             except:
-                _logrun('The fixture tear down failed')
+                _logrun('Could not instanciate a fixture plugin instance')
                 raise
 
-    _logrun('Building the report')
+            try:
+                fixture.setup()
+            except:
+                _logrun('The fixture set up failed')
+                raise
 
-    report = run_report + ' --skip-definitions --css %s --html -r %s  %s'
-    run_func(queue, job_id, report % (CSS_FILE, report_dir, xml_files))
-
-    # do we send an email with the result ?
-    if email is None:
-        email = config.get('email')
-
-    if email is not None:
-        _logrun('Sending an e-mail to %r' % email)
         try:
-            res, msg = send_report(email, job_id, **options)
-        except Exception, e:
-            res = False
-            msg = str(e)
+            _logrun('Running the loadtest')
+            run_func(queue, job_id, '%s %s %s' % (cmd, script, test))
+        finally:
+            _logrun('Running the fixture tear_down method')
+            if fixture_plugin:
+                try:
+                    fixture.tear_down()
+                except:
+                    _logrun('The fixture tear down failed')
+                    raise
 
-        if not res:
-            _logrun(msg)
-        else:
-            _logrun('Mail sent.')
+        _logrun('Building the report')
+        report = run_report + ' --skip-definitions --css %s --html -r %s  %s'
+        run_func(queue, job_id, report % (CSS_FILE, report_dir, xml_files))
 
-    return report_dir
+        # do we send an email with the result ?
+        if email is None:
+            email = config.get('email')
+
+        if email is not None:
+            _logrun('Sending an e-mail to %r' % email)
+            try:
+                res, msg = send_report(email, job_id, **options)
+            except Exception, e:
+                res = False
+                msg = str(e)
+
+            if not res:
+                _logrun(msg)
+            else:
+                _logrun('Mail sent.')
+
+        return report_dir
+    finally:
+        if distributed:
+            release_nodes(nodes, queue, options)
 
 
 def send_job(repo, server, cycles='', duration='', nodes='', redirect_url=''):
