@@ -1,5 +1,12 @@
 <%inherit file="base.mako"/>
 
+%if request.registry.settings['aws']:
+<div>
+ <p>Manage your AWS environment.</p>
+ <a href="https://console.aws.amazon.com/ec2/v2/home"> <img src="/media/ec2.png"/></a>
+</div>
+
+%else:
 
 <div class="smallform resource">
 <form action="/nodes" method="POST">
@@ -57,3 +64,5 @@
 %endif
 
 </div>
+
+%endif

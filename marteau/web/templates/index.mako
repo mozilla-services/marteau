@@ -40,13 +40,19 @@ Dude. No workers, no chocolate.
 
 <div id="nodes" class="resource">
 <span>Nodes</span> <a href="/nodes">manage</a>
-%for node in nodes:
-<div>${node.name}</div>
-%endfor
-%if not nodes:
-<div>
-C'mon, I need some boxes.
+%if request.registry.settings['aws']:
+<div> 
+  <img src="/media/ec2-small.png"/><br/> Powered by AWS.
 </div>
+%else:
+  %for node in nodes:
+    <div>${node.name}</div>
+  %endfor
+  %if not nodes:
+  <div>
+    C'mon, I need some boxes.
+   </div>
+  %endif
 %endif
 </div>
 
