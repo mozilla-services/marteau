@@ -25,7 +25,7 @@ from marteau.util import generate_key
 from marteau.fixtures import get_fixtures, get_fixture
 
 
-TOPDIR = os.path.dirname(marteau.__file__)
+TOPDIR = os.path.dirname(__file__)
 MEDIADIR = os.path.join(TOPDIR, 'media')
 TMPLDIR = os.path.join(TOPDIR, 'templates')
 TMPLS = TemplateLookup(directories=[TMPLDIR])

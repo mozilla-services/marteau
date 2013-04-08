@@ -24,16 +24,16 @@ class Request(BaseRequest):
 def main(global_config, **settings):
     # defaults
     if 'mako.directories' not in settings:
-        settings['mako.directories'] = 'marteau:templates'
+        settings['mako.directories'] = 'marteau:web/templates'
 
     session_factory = session_factory_from_settings(settings)
-   
+
     # configure the waitress logger
     logger = logging.getLogger('waitress')
     logger.setLevel(logging.DEBUG)
     ch = logging.StreamHandler()
     ch.setLevel(logging.DEBUG)
-    logger.addHandler(ch)    
+    logger.addHandler(ch)
 
     # creating the config and the queue
     config = Configurator(settings=settings, session_factory=session_factory)
@@ -69,7 +69,7 @@ def main(global_config, **settings):
     config.add_route('fixture_options', '/fixture_options/{fixture:.*}')
     config.add_route('project_options', '/project_options/{project:.*}')
 
-    config.add_static_view('media', 'marteau:media/')
+    config.add_static_view('media', 'marteau:web/media/')
     config.add_route('karaoke', '/media/marteau.kar')
 
     config.scan("marteau.web.views")
