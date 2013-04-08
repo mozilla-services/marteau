@@ -17,12 +17,14 @@ from pyramid.exceptions import Forbidden
 from mako.lookup import TemplateLookup
 import paramiko
 import yaml
+from redis import Redis
 
 from marteau.node import Node
 from marteau.web.schemas import JobSchema, NodeSchema
 import marteau
 from marteau.util import generate_key
 from marteau.fixtures import get_fixtures, get_fixture
+from marteau.host import Host
 
 
 TOPDIR = os.path.dirname(__file__)
@@ -43,7 +45,8 @@ def check_auth(request):
     for domain in authorized_domains:
 
         if request.user.endswith('@' + domain):
-            return
+            return request.user
+
     raise Forbidden()
 
 
@@ -81,6 +84,7 @@ def profile(request):
     user = authenticated_userid(request)
     if user is None:
         key = None
+        hosts = []
     else:
         if 'generate' in request.POST:
             key = generate_key()
@@ -88,7 +92,12 @@ def profile(request):
         else:
             key = queue.get_key(user)
 
-    return {'user': user, 'key': key}
+        redis = Redis()
+        hosts = redis.smembers('marteaudb:hosts:%s' % user)
+        hosts = [Host.from_json(host) for host in hosts]
+
+    return {'user': user, 'key': key, 'hosts': hosts,
+            'messages': request.session.pop_flash()}
 
 
 @view_config(route_name='purge', request_method='GET')
@@ -408,3 +417,43 @@ def project_options(request):
         return yaml.load(res.content)
 
     return {}
+
+
+@view_config(route_name='hosts', request_method='POST')
+def add_host(request):
+    user = check_auth(request)
+    redis = Redis()
+    host = request.POST['host']   # XXX protect
+
+    if redis.sismember('marteaudb:hosts', host):
+        request.session.flash('Host already registered.')
+        return HTTPFound(location='/profile')
+
+    # creating host
+    host = Host(name=host, user=user)
+    redis.sadd('marteaudb:hosts:%s' % user, host.to_json())
+    redis.sadd('marteaudb:hosts', host.name)
+    request.session.flash('Host added.')
+    return HTTPFound(location='/profile')
+
+
+@view_config(route_name='host', request_method=('DELETE', 'GET'))
+def delete_host(request):
+    user = check_auth(request)
+    redis = Redis()
+    host = request.matchdict['host']
+
+    if not redis.sismember('marteaudb:hosts', host):
+        request.session.flash('Host not found.')
+        return HTTPFound(location='/profile')
+
+    user_hosts = 'marteaudb:hosts:%s' % user
+    for data in redis.smembers(user_hosts):
+        host_ob = Host.from_json(data)
+        if host_ob.name == host:
+            redis.srem(user_hosts, data)
+            redis.srem('marteaudb:hosts', host)
+            request.session.flash('Host removed.')
+            break
+
+    return HTTPFound(location='/profile')
