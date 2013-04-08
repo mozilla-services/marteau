@@ -1,9 +1,10 @@
+import logging
 from pyramid.config import Configurator
 from pyramid_beaker import session_factory_from_settings
 from pyramid.decorator import reify
 from pyramid.request import Request as BaseRequest
 from pyramid.security import authenticated_userid
-
+from pyramid.exceptions import Forbidden
 
 from marteau import queue
 
@@ -17,18 +18,7 @@ class Request(BaseRequest):
         """
         Get the logged in user
         """
-        user = authenticated_userid(self)
-        if user is None:
-            return None
-
-        # if we're authenticated we want to make sure we're authorized
-        domains = self.registry.settings.get('authorized_domains',
-                                             'mozilla.com')
-        domains = domains.split(',')
-        for domain in domains:
-            if user.endswith('@' + domain):
-                return user
-        raise Forbidden()
+        return authenticated_userid(self)
 
 
 def main(global_config, **settings):
@@ -37,6 +27,13 @@ def main(global_config, **settings):
         settings['mako.directories'] = 'marteau:templates'
 
     session_factory = session_factory_from_settings(settings)
+   
+    # configure the waitress logger
+    logger = logging.getLogger('waitress')
+    logger.setLevel(logging.DEBUG)
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+    logger.addHandler(ch)    
 
     # creating the config and the queue
     config = Configurator(settings=settings, session_factory=session_factory)
