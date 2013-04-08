@@ -33,6 +33,20 @@ JOBTIMEOUT = 3600    # one hour
 DOCDIR = os.path.join(TOPDIR, 'docs', 'build', 'html')
 
 
+def check_auth(request):
+    if request.user is None:
+        raise Forbidden()
+
+    authorized_domains = request.registry.settings.get('authorized_domains',
+                                                       'mozilla.com')
+    authorized_domains = authorized_domains.split(',')
+    for domain in authorized_domains:
+
+        if request.user.endswith('@' + domain):
+            return
+    raise Forbidden()
+
+
 def time2str(data):
     if data is None:
         return 'Unknown date'
@@ -80,8 +94,7 @@ def profile(request):
 @view_config(route_name='purge', request_method='GET')
 def purge(request):
     """Purges all queues in Redis"""
-    if request.user is None:
-        raise Forbidden()
+    check_auth(request)
     request.registry['queue'].purge()
     request.session.flash('Purged')
     return HTTPFound('/')
@@ -90,8 +103,7 @@ def purge(request):
 @view_config(route_name='reset', request_method='GET')
 def reset_nodes(request):
     """Resets the nodes state to idle."""
-    if request.user is None:
-        raise Forbidden()
+    check_auth(request)
     request.registry['queue'].reset_nodes()
     request.session.flash('Reset done.')
     return HTTPFound('/')
@@ -117,9 +129,8 @@ def add_job(request):
 @view_config(route_name='test', request_method='POST', renderer='json')
 def add_run(request):
     """Adds a run into Marteau"""
+    check_auth(request)
     owner = request.user
-    if owner is None:
-        raise Forbidden()
 
     #form = Form(request, schema=JobSchema)
 
@@ -177,8 +188,7 @@ def add_run(request):
 @view_config(route_name='cancel', request_method='GET')
 def _cancel_job(request):
     """Cancels a running Job."""
-    if request.user is None:
-        raise Forbidden()
+    check_auth(request)
     jobid = request.matchdict['jobid']
     queue = request.registry['queue']
     queue.cancel_job(jobid)
@@ -189,8 +199,7 @@ def _cancel_job(request):
 @view_config(route_name='delete', request_method='GET')
 def _delete_job(request):
     """Deletes a job."""
-    if request.user is None:
-        raise Forbidden()
+    check_auth(request)
     jobid = request.matchdict['jobid']
     queue = request.registry['queue']
     queue.delete_job(jobid)
@@ -200,8 +209,7 @@ def _delete_job(request):
 @view_config(route_name='replay', request_method='GET')
 def _requeue_job(request):
     """Replay a job."""
-    if request.user is None:
-        raise Forbidden()
+    check_auth(request)
     jobid = request.matchdict['jobid']
     queue = request.registry['queue']
     queue.replay(jobid)
@@ -241,8 +249,7 @@ def _nodes(request):
 @view_config(route_name='node_enable', request_method='GET')
 def enable_node(request):
     """Enables/Disables a node."""
-    if request.user is None:
-        raise Forbidden()
+    check_auth(request)
     # load existing
     queue = request.registry['queue']
     name = request.matchdict['name']
@@ -258,8 +265,7 @@ def enable_node(request):
 @view_config(route_name='node_test', request_method='GET', renderer='string')
 def test_node(request):
     """Runs an SSH call on a node."""
-    if request.user is None:
-        raise Forbidden()
+    check_auth(request)
     # trying an ssh connection
     connection = paramiko.client.SSHClient()
     connection.load_system_host_keys()
@@ -294,8 +300,7 @@ def get_or_del_node(request):
     queue = request.registry['queue']
 
     if 'delete' in request.params:
-        if request.user is None:
-            raise Forbidden()
+        check_auth(request)
         queue.delete_node(name)
         return HTTPFound(location='/nodes')
 
@@ -305,9 +310,8 @@ def get_or_del_node(request):
 @view_config(route_name='nodes', request_method='POST')
 def add_node(request):
     """Adds a new into Marteau"""
-    owner = authenticated_userid(request)
-    if owner is None:
-        raise Forbidden()
+    check_auth(request)
+    owner = request.user
 
     form = Form(request, schema=NodeSchema)
 

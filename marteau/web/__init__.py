@@ -17,7 +17,15 @@ class Request(BaseRequest):
         """
         Get the logged in user
         """
-        return authenticated_userid(self)
+        user = authenticated_userid(self)
+        # if we're authenticated we want to make sure we're authorized
+        domains = self.registry.settings.get('authorized_domains',
+                                             'mozilla.com')
+        domains = domains.split(',')
+        for domain in domains:
+            if user.endswith('@' + domain):
+                return user
+        raise Forbidden()
 
 
 def main(global_config, **settings):
