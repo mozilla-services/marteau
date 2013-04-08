@@ -14,6 +14,8 @@ import smtplib
 import sys
 
 import tokenlib
+import requests
+
 from marteau import logger
 
 DEFAULT_ROOT = 'http://localhost'
@@ -245,3 +247,17 @@ def redis_available():
         return connection.ping()
     except ConnectionError:
         return False
+
+
+def check_host(hostname, key):
+    # we want to find the key in host/__marteau__
+    if not hostname.endswith('/'):
+        hostname += '/'
+    url = hostname + '__marteau__'
+    res = requests.get(url)
+
+    if res.status_code != 200:
+        return False
+
+    founded = res.content
+    return founded.strip() == key.strip()
