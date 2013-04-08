@@ -253,8 +253,13 @@ def check_host(hostname, key):
     # we want to find the key in host/__marteau__
     if not hostname.endswith('/'):
         hostname += '/'
-    url = hostname + '__marteau__'
-    res = requests.get(url)
+
+    try:
+        url = 'https://' + hostname + '__marteau__'
+        res = requests.get(url)
+    except Exception:
+        url = 'http://' + hostname + '__marteau__'
+        res = requests.get(url)
 
     if res.status_code != 200:
         return False
