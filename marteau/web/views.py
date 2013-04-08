@@ -30,7 +30,7 @@ MEDIADIR = os.path.join(TOPDIR, 'media')
 TMPLDIR = os.path.join(TOPDIR, 'templates')
 TMPLS = TemplateLookup(directories=[TMPLDIR])
 JOBTIMEOUT = 3600    # one hour
-DOCDIR = os.path.join(TOPDIR, 'docs', 'build', 'html')
+DOCDIR = os.path.join(TOPDIR, '..', 'docs', 'build', 'html')
 
 
 def check_auth(request):
