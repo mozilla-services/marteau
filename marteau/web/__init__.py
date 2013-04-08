@@ -18,6 +18,9 @@ class Request(BaseRequest):
         Get the logged in user
         """
         user = authenticated_userid(self)
+        if user is None:
+            return None
+
         # if we're authenticated we want to make sure we're authorized
         domains = self.registry.settings.get('authorized_domains',
                                              'mozilla.com')
