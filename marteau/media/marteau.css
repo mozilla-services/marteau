@@ -1,0 +1,282 @@
+
+@import url(http://fonts.googleapis.com/css?family=Quando);
+
+body {
+  font-family: 'Quando', serif;
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+a {
+ text-decoration: none;
+ color: grey;
+}
+
+a:hover {
+ text-decoration: underline;
+}
+
+h1.title {
+  background-image: url("/media/head.png");
+  height: 80px;
+  color: white;
+  border: none;
+  padding-left: 20px;
+  padding-top: 2px;
+  margin: 0px;
+}
+
+h1.title a {
+  color: white;
+}
+
+div.section, div.abstract, div.contents, table.docinfo {
+  padding-right: 20px;
+  padding-left: 20px;
+  color: black;
+}
+
+a.toc-backref {
+  color: black;
+}
+
+
+pre {
+    font-family: 'Consolas','Deja Vu Sans Mono','Bitstream Vera Sans Mono',monospace;
+    font-size: 0.95em;
+    letter-spacing: 0.015em;
+    line-height: 120%;
+    padding: 0.5em;
+    border: 1px solid rgb(204, 204, 204);
+    background-color: rgb(238, 238, 238);
+    border-radius: 6px 6px 6px 6px;
+    overflow-x: auto;
+}
+
+#header {
+  background-image: url("/media/head.png");
+  color: white;
+  border: none;
+  padding-left: 20px;
+  padding-top: 2px;
+  margin: 0px;
+  vertical-align: middle;
+  display:block;
+}
+
+#header img {
+  display: inline-block;
+}
+
+
+#title {
+  font-size: 40px;
+  text-decoration: none;
+  color: white;
+}
+
+#subtitle {
+  font-size: 15px;
+  font-style: italic;
+}
+
+#body {
+  padding: 20px;
+  background-image: url("/media/fade.png") repeat-x scroll -70% 0px transparent;
+
+}
+
+p {
+  font-style: italic;
+  color: grey;
+  font-size: 20px;
+}
+
+#right {
+ float:right;
+}
+
+div.resource {
+  margin-right: 5px;
+  padding: 12px;
+  border: 1px dotted rgb(203, 200, 185);
+  background: none repeat scroll 0% 0% rgb(246, 246, 242);
+}
+
+div.resource span {
+  font-weight: bold;
+  font-size: 20px;
+}
+
+div.resource div {
+  font-style: italic;
+  margin-top: 6px;
+}
+
+#running, #pending, #failures, #successes {
+  float: left;
+  min-width: 400px;
+  padding: 10px;
+}
+
+#workers {
+ margin-bottom: 10px;
+ margin-top: 10px;
+}
+
+div.resource a {
+  float: right;
+}
+
+div.smallform {
+  width: 400px;
+  float: right;
+  margin-top: 10px;
+  border: 1px dotted rgb(203, 200, 185);
+  background: none repeat scroll 0% 0% rgb(246, 246, 242);
+  padding: 12px;
+  margin-right: 5px;
+}
+
+div.smallform input[type="text"]  {
+  width: 300px;
+}
+
+#form {
+  margin-top: 10px;
+  border: 1px dotted rgb(203, 200, 185);
+  background: none repeat scroll 0% 0% rgb(246, 246, 242);
+  padding: 12px;
+  margin-right: 5px;
+}
+
+#form input[type="text"]  {
+  width: 300px;
+}
+
+table.nodes {
+ text-align: center;
+ font-weight: normal;
+ color: #404040;
+ background: none repeat scroll 0% 0% rgb(246, 246, 242);
+ border: 1px dotted rgb(203, 200, 185);
+ border-collapse: collapse;
+ border-spacing: 10px;
+ padding: 10px;
+ min-width: 500px;
+}
+
+table.nodes th {
+    border-bottom: 1px dotted #6699CC;
+    color: #404040;
+    text-align: center;
+    padding: 5px;
+    background-color: white;
+}
+
+table.nodes td {
+    border-bottom: 1px dotted #6699CC;
+    color: #404040;
+    text-align: center;
+    padding: 5px;
+
+}
+
+.label {
+    font-size: 75%;
+    font-weight: bold;
+    line-height: 14px;
+    color: rgb(255, 255, 255);
+    text-shadow: 0px -1px 0px rgba(0, 0, 0, 0.25);
+    white-space: nowrap;
+    vertical-align: baseline;
+    background-color: rgb(58, 135, 173);
+    padding: 1px 4px 2px;
+    border-radius: 3px 3px 3px 3px;
+}
+
+a.label {
+    text-decoration: none;
+}
+
+div.actions {
+  float: left;
+  margin-right: 20px;
+  margin-bottom: 20px;
+}
+
+div.message {
+  margin-right: 25px;
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px dotted rgb(203, 200, 185);
+  background: none repeat scroll 0% 0% rgb(246, 246, 242);
+  float: right;
+  color: black;
+}
+
+div.login {
+  float: right;
+  margin-right: 20px;
+  margin-top: 5px;
+}
+
+form.job {
+/*  width: 100%*/
+}
+
+form.job label {
+  padding-left: 5px;
+}
+
+form.job input {
+}
+
+
+form.job fieldset
+{
+  position: relative;
+  margin-top: 15px;
+  margin: 0 0 1em 0;  
+  padding-top: 20px;
+  width: 93%;
+  border: 1px solid gray;
+}
+
+
+form.job fieldset legend 
+{
+  font-size: 140%;
+  font-weight: bold;
+}
+
+form.job fieldset ol 
+{
+    padding: 0 1em 0 1em;  
+    list-style: none;
+}
+
+form.job fieldset li 
+{
+    /* Control leading between rows. */
+    padding-bottom: .7em;
+}
+
+form.job fieldset ol li label {
+  float: left;
+  width: 10em;
+  margin-right: 1em;
+  font-size: 130%
+}
+
+input.button
+{
+  height: 2.5em;
+}
+
+div.buttonsContainer
+{
+    float: left;
+}
+
