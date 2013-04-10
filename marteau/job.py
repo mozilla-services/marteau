@@ -263,6 +263,8 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
         if options.get('feedback', None) is not None:
             cmd += ' --feedback'
             cmd += ' --feedback-endpoint %s' % options['feedback_endpoint']
+            cmd += ' --feedback-pubsub-endpoint %s' %
+                        options['feedback_publisher']
 
     else:
         cmd = run_bench
