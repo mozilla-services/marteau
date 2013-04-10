@@ -457,3 +457,28 @@ def delete_host(request):
             break
 
     return HTTPFound(location='/profile')
+
+
+@view_config(route_name='verify_host', request_method='GET')
+def verify_host(request):
+    user = check_auth(request)
+    redis = Redis()
+    host = request.matchdict['host']
+
+    if not redis.sismember('marteaudb:hosts', host):
+        request.session.flash('Host not found.')
+        return HTTPFound(location='/profile')
+
+    user_hosts = 'marteaudb:hosts:%s' % user
+    for data in redis.smembers(user_hosts):
+        host_ob = Host.from_json(data)
+        if host_ob.name == host:
+            if host_ob.verify():
+                redis.srem(user_hosts, data)
+                redis.sadd(user_hosts, host_ob.to_json())
+                request.session.flash('Host verified.')
+            else:
+                request.session.flash('Host verification failed.')
+            break
+
+    return HTTPFound(location='/profile')

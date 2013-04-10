@@ -255,10 +255,10 @@ def check_host(hostname, key):
         hostname += '/'
 
     try:
-        url = 'https://' + hostname + '__marteau__'
+        url = 'https://' + hostname + key
         res = requests.get(url)
     except Exception:
-        url = 'http://' + hostname + '__marteau__'
+        url = 'http://' + hostname + key
         res = requests.get(url)
 
     if res.status_code != 200:

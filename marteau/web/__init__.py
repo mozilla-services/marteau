@@ -69,6 +69,7 @@ def main(global_config, **settings):
     config.add_route('fixture_options', '/fixture_options/{fixture:.*}')
     config.add_route('project_options', '/project_options/{project:.*}')
     config.add_route('hosts', '/hosts')
+    config.add_route('verify_host', '/hosts/{host:.*}/verify')
     config.add_route('host', '/hosts/{host:.*}')
     config.add_static_view('media', 'marteau:web/media/')
     config.add_route('karaoke', '/media/marteau.kar')

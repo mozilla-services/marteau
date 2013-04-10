@@ -28,13 +28,21 @@
    <h2>Registered hosts</h2>
    %for host in hosts:
       <div>
-         <form method="DELETE" action="/hosts/${host.name}">
-           <strong>${host.name}</strong>
-           <input name="revoke" type="submit" value="Revoke"></input>
-         </form>
+           <div>
+             <strong>${host.name}</strong>
+              %if host.verified:
+               ✓ Verified 
+              %endif
+             <form method="GET" action="/hosts/${host.name}/verify">
+               <input name="verify" type="submit" value="Verify"></input>
+             </form>
+             <form method="DELETE" action="/hosts/${host.name}">
+               <input name="revoke" type="submit" value="Revoke"></input>
+             </form>
+           </div>
+           <pre>${host.key}</pre>
 
-         <pre>${host.key}</pre>
-      </div>  
+      </div>
    %endfor
 
    <form method="POST" action="/hosts">
