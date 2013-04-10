@@ -3,23 +3,20 @@ from setuptools import setup, find_packages
 from marteau import __version__
 
 
-install_requires = ['funkload', 'pyramid',
+install_requires = ['funkload',
                     'gevent',
                     'gevent_subprocess',
-                    'PyYAML', 'paramiko',
-                    'Mako', 'retools',
-                    'virtualenv', 'Sphinx',
-                    'pyramid_simpleform',
-                    'formencode',
-                    'pyramid_persona',
-                    'pyramid_beaker',
-                    'pyramid_macauth',
-                    'pyramid_multiauth',
+                    'PyYAML',
+                    'paramiko',
+                    'retools',
+                    'virtualenv',
                     'wsgiproxy',
                     'vaurienclient',
                     'requests',
                     'fabric',
-                    'boto'
+                    'tokenlib',
+                    'boto',
+                    'macauthlib'
                     ]
 
 
@@ -74,6 +71,5 @@ setup(name='marteau',
       test_suite='nose.collector',
       entry_points="""
       [console_scripts]
-      marteau-serve = marteau.runserver:main
       marteau = marteau.job:main
       """, **kwargs)
