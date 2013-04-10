@@ -258,6 +258,12 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
         cmd += ' --distributed-log-path=%s' % target
         if 'ssh_key' in options:
             cmd += ' --distributed-key-filename=%s' % options['ssh_key']
+
+        # asking the node to send us realtime feedback.
+        if options.get('feedback', None) is not None:
+            cmd += ' --feedback'
+            cmd += ' --feedback-endpoint %s' % options['feedback_endpoint']
+
     else:
         cmd = run_bench
 
