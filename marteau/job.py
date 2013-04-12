@@ -188,10 +188,10 @@ def get_nodes(nodes_count, queue, options):
             node.status = 'working'
             queue.save_node(node)
 
-    node_user = options.get('node_user')
-    if node_user is not None:
+    ssh_user = options.get('ssh_user')
+    if ssh_user is not None:
         for node in nodes:
-            node.name = '%s@%s' % (node_user, node.name)
+            node.name = '%s@%s' % (ssh_user, node.name)
 
     return nodes
 
