@@ -13,6 +13,7 @@ try:
 except ImportError:
     from gevent_subprocess import Popen, PIPE
 
+import gevent
 
 from marteau import __version__, logger
 from marteau.queue import Queue
@@ -45,14 +46,18 @@ CSS_FILE = os.path.join(os.path.dirname(__file__), 'media', 'marteau.css')
 
 
 class RedisIO(StringIO):
-    def __init__(self, orig):
+    def __init__(self, orig, pid=None):
         StringIO.__init__(self)
         self.orig = orig
         self._queue = Queue()
+        if pid is None:
+            self.pid = os.getpid()
+        else:
+            self.pid = pid
 
     def write(self, msg):
         self.orig.write(msg)
-        job_id = self._queue.pid_to_jobid(os.getpid())
+        job_id = self._queue.pid_to_jobid(self.pid)
         if job_id is not None:
             self._queue.append_console(job_id, msg)
 
@@ -191,6 +196,18 @@ def get_nodes(nodes_count, queue, options):
     return nodes
 
 
+def _rt_handler(msg, **kw):
+    return
+    # XXX
+    if msg['result'] == 'failure':
+        msg = 'F'
+    else:
+        msg = '.'
+    queue = kw['queue']
+    job_id = queue.pid_to_jobid(kw['pid'])
+    if job_id is not None:
+        queue.append_console(job_id, msg)
+
 
 @catch_std
 @cleanup
@@ -201,6 +218,8 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
                  reportsdir=DEFAULT_REPORTSDIR, test=None, script=None):
     if options is None:
         options = {}
+
+    rtfeedback = options.get('feedback', None) is not None
 
     # loading the fixtures plugins
     for fixture in options.get('fixtures', []):
@@ -240,6 +259,9 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
         os.chdir(target)
 
     deps = config.get('deps', [])
+    if rtfeedback and 'pyzmq' not in deps:
+        deps.append('pyzmq')
+
     if distributed:
         # is this a distributed test ?
         if nodes_count in (None, ''):    # XXX fix later
@@ -260,10 +282,10 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
             cmd += ' --distributed-key-filename=%s' % options['ssh_key']
 
         # asking the node to send us realtime feedback.
-        if options.get('feedback', None) is not None:
+        if rtfeedback:
             cmd += ' --feedback'
             cmd += ' --feedback-endpoint %s' % options['feedback_endpoint']
-            cmd += ' --feedback-pubsub-endpoint %s' %
+            cmd += ' --feedback-pubsub-endpoint %s' % \
                         options['feedback_publisher']
 
     else:
@@ -321,6 +343,14 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
                 _logrun('The fixture set up failed')
                 raise
 
+        # starting the feedback subscriberin its own thread
+        if rtfeedback:
+            from funkload.rtfeedback import FeedbackSubscriber
+            sub = FeedbackSubscriber(pubsub_endpoint=options['feedback_publisher'],
+                                     handler=_rt_handler,
+                                     pid=os.getpid(), queue=queue)
+            sub.start()
+
         try:
             _logrun('Running the loadtest')
             run_func(queue, job_id, '%s %s %s' % (cmd, script, test))
@@ -332,6 +362,9 @@ def run_loadtest(repo, cycles=None, nodes_count=None, duration=None,
                 except:
                     _logrun('The fixture tear down failed')
                     raise
+
+            if rtfeedback:
+                sub.terminate()
 
         _logrun('Building the report')
         report = run_report + ' --skip-definitions --css %s --html -r %s  %s'
@@ -435,12 +468,17 @@ def main():
         logger.info('Bye!')
         sys.exit(0)
     else:
+        options = {'feedback': 1,
+                   'feedback_endpoint': 'tcp://0.0.0.0:5555',
+                   'feedback_publisher': 'tcp://0.0.0.0:5556'}
+
         logger.info('Hammer ready. Where are the nails ?')
         try:
             res = run_loadtest(args.repo, distributed=args.distributed,
                                fl_result_path=args.result_path,
                                fixture_plugin=args.fixture_plugin,
-                               fixture_options=args.fixture_options)
+                               fixture_options=args.fixture_options,
+                               options=options)
             logger.info('Report generated at %r' % res)
         except KeyboardInterrupt:
             sys.exit(1)
