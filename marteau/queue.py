@@ -161,7 +161,7 @@ class Queue(object):
                     'repo': data['metadata']['repo']}
 
         kwargs['metadata'] = metadata
-        self.enqueue(job_name, **kwargs)
+        return self.enqueue(job_name, **kwargs)
 
     def enqueue(self, funcname, **kwargs):
         return self._qm.enqueue(funcname, **kwargs)
